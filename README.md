@@ -858,6 +858,108 @@ Use `aspect-[width/height]` for custom ratios:
 
 > **Note:** The aspect ratio is calculated as `width / height`. When combined with `w-full`, the height will be automatically calculated to maintain the ratio.
 
+### Transforms
+
+Apply 2D and 3D transformations to views with React Native's transform API. All transforms compile to optimized transform arrays at build time:
+
+**Scale:**
+
+- `scale-{value}` — Scale uniformly (both X and Y)
+- `scale-x-{value}`, `scale-y-{value}` — Scale on specific axis
+- **Values:** `0`, `50`, `75`, `90`, `95`, `100`, `105`, `110`, `125`, `150`, `200`
+- **Arbitrary:** `scale-[1.23]`, `scale-x-[0.5]`, `scale-y-[2.5]`
+
+**Rotate:**
+
+- `rotate-{degrees}`, `-rotate-{degrees}` — Rotate in 2D
+- `rotate-x-{degrees}`, `rotate-y-{degrees}`, `rotate-z-{degrees}` — Rotate on specific axis
+- **Values:** `0`, `1`, `2`, `3`, `6`, `12`, `45`, `90`, `180`
+- **Arbitrary:** `rotate-[37deg]`, `-rotate-[15deg]`, `rotate-x-[30deg]`
+
+**Translate:**
+
+- `translate-x-{spacing}`, `translate-y-{spacing}` — Move on specific axis
+- `-translate-x-{spacing}`, `-translate-y-{spacing}` — Negative translation
+- **Values:** Uses spacing scale (same as `m-*`, `p-*`)
+- **Arbitrary:** `translate-x-[50px]`, `translate-y-[100px]`, `translate-x-[50%]`
+
+**Skew:**
+
+- `skew-x-{degrees}`, `skew-y-{degrees}` — Skew on specific axis
+- `-skew-x-{degrees}`, `-skew-y-{degrees}` — Negative skew
+- **Values:** `0`, `1`, `2`, `3`, `6`, `12`
+- **Arbitrary:** `skew-x-[15deg]`, `-skew-y-[8deg]`
+
+**Perspective:**
+
+- `perspective-{value}` — Apply perspective transformation
+- **Values:** `0`, `100`, `200`, `300`, `400`, `500`, `600`, `700`, `800`, `900`, `1000`
+- **Arbitrary:** `perspective-[1500]`, `perspective-[2000]`
+
+**Examples:**
+
+```tsx
+// Scale
+<View className="scale-110 p-4">
+  {/* 110% scale (1.1x larger) */}
+  <Text>Scaled content</Text>
+</View>
+
+// Rotate
+<View className="rotate-45 w-16 h-16 bg-blue-500" />
+
+// Translate
+<View className="translate-x-4 translate-y-2 bg-red-500 p-4">
+  {/* Moved 16px right, 8px down */}
+</View>
+
+// Arbitrary values
+<View className="scale-[1.23] w-16 h-16 bg-green-500" />
+<View className="rotate-[37deg] w-16 h-16 bg-purple-500" />
+<View className="translate-x-[50px] bg-orange-500 p-4" />
+
+// Negative values
+<View className="-rotate-45 w-16 h-16 bg-pink-500" />
+<View className="-translate-x-4 -translate-y-2 bg-indigo-500 p-4" />
+
+// 3D rotation
+<View className="rotate-x-45 w-16 h-16 bg-yellow-500" />
+<View className="rotate-y-30 w-16 h-16 bg-teal-500" />
+
+// Skew
+<View className="skew-x-6 w-16 h-16 bg-cyan-500" />
+
+// Perspective
+<View className="perspective-500">
+  <View className="rotate-x-45 w-16 h-16 bg-blue-500" />
+</View>
+```
+
+**Multiple Transforms Limitation:**
+
+Due to the current architecture, multiple transform classes on the same element will overwrite each other. For example:
+
+```tsx
+// ❌ Only rotate-45 will apply (overwrites scale-110)
+<View className="scale-110 rotate-45 w-16 h-16 bg-blue-500" />
+
+// ✅ Workaround: Use nested Views for multiple transforms
+<View className="scale-110">
+  <View className="rotate-45">
+    <View className="w-16 h-16 bg-blue-500" />
+  </View>
+</View>
+```
+
+This limitation exists because the current parser architecture uses `Object.assign()` which overwrites the `transform` property when multiple transform classes are present. This will be addressed in a future update by modifying the Babel plugin to detect multiple transform classes and generate style arrays.
+
+**What's Not Supported:**
+
+- `transform-origin` — Not available in React Native (transforms always use center as origin)
+- Multiple transforms on one element — Use nested Views (see workaround above)
+
+> **Note:** All transform parsing happens at compile-time with zero runtime overhead. Each transform compiles to a React Native transform array: `transform: [{ scale: 1.1 }]`, `transform: [{ rotate: '45deg' }]`, etc.
+
 ### Sizing
 
 - `w-{size}`, `h-{size}` — Width/height
@@ -889,6 +991,12 @@ Use arbitrary values for custom sizes, spacing, and borders not in the preset sc
 - **Sizing:** `w-[...]`, `h-[...]`, `min-w-[...]`, `min-h-[...]`, `max-w-[...]`, `max-h-[...]` (px and %)
 - **Border width:** `border-[...]`, `border-t-[...]`, `border-r-[...]`, `border-b-[...]`, `border-l-[...]` (px only)
 - **Border radius:** `rounded-[...]`, `rounded-t-[...]`, `rounded-tl-[...]`, etc. (px only)
+- **Transforms:**
+  - **Scale:** `scale-[...]`, `scale-x-[...]`, `scale-y-[...]` (number only, e.g., `[1.23]`)
+  - **Rotate:** `rotate-[...]`, `rotate-x-[...]`, `rotate-y-[...]`, `rotate-z-[...]` (deg only, e.g., `[37deg]`)
+  - **Translate:** `translate-x-[...]`, `translate-y-[...]` (px or %, e.g., `[50px]` or `[50%]`)
+  - **Skew:** `skew-x-[...]`, `skew-y-[...]` (deg only, e.g., `[15deg]`)
+  - **Perspective:** `perspective-[...]` (number only, e.g., `[1500]`)
 
 **Formats:**
 
