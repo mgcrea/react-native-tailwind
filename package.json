@@ -1,6 +1,6 @@
 {
   "name": "@mgcrea/react-native-tailwind",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "description": "Compile-time Tailwind CSS for React Native with zero runtime overhead",
   "author": "Olivier Louvignes <olivier@mgcrea.io> (https://github.com/mgcrea)",
   "homepage": "https://github.com/mgcrea/react-native-tailwind#readme",
