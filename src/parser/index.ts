@@ -11,6 +11,7 @@ import { parseLayout } from "./layout";
 import { parseShadow } from "./shadows";
 import { parseSizing } from "./sizing";
 import { parseSpacing } from "./spacing";
+import { parseTransform } from "./transforms";
 import { parseTypography } from "./typography";
 
 /**
@@ -50,6 +51,7 @@ export function parseClass(cls: string, customColors?: Record<string, string>): 
     parseSizing,
     parseShadow,
     parseAspectRatio,
+    parseTransform,
   ];
 
   for (const parser of parsers) {
@@ -75,6 +77,7 @@ export { parseLayout } from "./layout";
 export { parseShadow } from "./shadows";
 export { parseSizing } from "./sizing";
 export { parseSpacing } from "./spacing";
+export { parseTransform } from "./transforms";
 export { parseTypography } from "./typography";
 
 // Re-export modifier utilities
