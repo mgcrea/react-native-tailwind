@@ -17,6 +17,7 @@ import {
 } from "../../utils/styleInjection.js";
 import { removeTwImports } from "../../utils/twProcessing.js";
 import type { PluginState } from "../state.js";
+import { removeVariantDefinitions, removeVariantImports } from "./variants.js";
 
 /**
  * Program enter visitor - initialize state for each file
@@ -41,9 +42,16 @@ export function programExit(
     removeTwImports(path, t);
   }
 
-  // If no classNames were found and no hooks/imports needed, skip processing
+  // Remove variant imports and definitions if they were processed
+  if (state.hasVariantDefinitions) {
+    removeVariantImports(path, state, t);
+    removeVariantDefinitions(path, state, t);
+  }
+
+  // If no classNames/variants were found and no hooks/imports needed, skip processing
   if (
     !state.hasClassNames &&
+    !state.hasVariantDefinitions &&
     !state.needsWindowDimensionsImport &&
     !state.needsColorSchemeImport &&
     !state.needsI18nManagerImport

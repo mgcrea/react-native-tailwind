@@ -11,6 +11,11 @@ import { jsxAttributeVisitor } from "./plugin/visitors/className.js";
 import { importDeclarationVisitor } from "./plugin/visitors/imports.js";
 import { programEnter, programExit } from "./plugin/visitors/program.js";
 import { callExpressionVisitor, taggedTemplateVisitor } from "./plugin/visitors/tw.js";
+import {
+  variantCallVisitor,
+  variantDefinitionVisitor,
+  variantImportVisitor,
+} from "./plugin/visitors/variants.js";
 
 // Re-export PluginOptions for external use
 export type { PluginOptions };
@@ -56,6 +61,13 @@ export default function reactNativeTailwindBabelPlugin(
 
       ImportDeclaration(path, state) {
         importDeclarationVisitor(path, state, t);
+        // Also track variant imports (tv/cva)
+        variantImportVisitor(path, state, t);
+      },
+
+      VariableDeclarator(path, state) {
+        // Process variant function definitions (const button = tv({...}))
+        variantDefinitionVisitor(path, state, t);
       },
 
       TaggedTemplateExpression(path, state) {
@@ -63,6 +75,9 @@ export default function reactNativeTailwindBabelPlugin(
       },
 
       CallExpression(path, state) {
+        // First check if this is a variant function call
+        variantCallVisitor(path, state, t);
+        // Then check for tw/twStyle calls
         callExpressionVisitor(path, state, t);
       },
 

@@ -9,6 +9,7 @@ import type { StyleObject } from "../../types/core.js";
 import type { CustomTheme } from "../config-loader.js";
 import { extractCustomTheme } from "../config-loader.js";
 import { DEFAULT_CLASS_ATTRIBUTES, buildAttributeMatchers } from "../utils/attributeMatchers.js";
+import type { VariantFunctionEntry } from "../utils/variantProcessing.js";
 
 /**
  * Plugin options
@@ -121,6 +122,11 @@ export type PluginState = PluginPass & {
   functionComponentsNeedingColorScheme: Set<NodePath<BabelTypes.Function>>;
   // Track function components that need windowDimensions hook injection
   functionComponentsNeedingWindowDimensions: Set<NodePath<BabelTypes.Function>>;
+  // Track tv/cva variant imports and definitions
+  tvImportNames: Set<string>;
+  cvaImportNames: Set<string>;
+  variantFunctions: Map<string, VariantFunctionEntry>;
+  hasVariantDefinitions: boolean;
 };
 
 // Default identifier for the generated StyleSheet constant
@@ -181,5 +187,10 @@ export function createInitialState(
     reactNativeImportPath: undefined,
     functionComponentsNeedingColorScheme: new Set(),
     functionComponentsNeedingWindowDimensions: new Set(),
+    // Variant support (tv/cva)
+    tvImportNames: new Set(),
+    cvaImportNames: new Set(),
+    variantFunctions: new Map(),
+    hasVariantDefinitions: false,
   };
 }
