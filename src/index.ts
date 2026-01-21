@@ -44,3 +44,6 @@ export { FONT_SIZES, LETTER_SPACING_SCALE } from "./parser/typography";
 
 // Re-export enhanced components with modifier support
 export * from "./components";
+
+// Re-export variants API (Tailwind Variants / CVA compatible)
+export * from "./variants";
