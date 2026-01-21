@@ -1,12 +1,12 @@
 /**
- * Utility functions for processing tv() and cva() variant calls
- * Uses the actual tailwind-variants and class-variance-authority libraries
- * at compile time to resolve variant class strings
+ * Utility functions for processing class utility calls (tv, cva, twMerge)
+ * Uses the actual libraries at compile time to resolve class strings
  */
 
 import type { NodePath } from "@babel/core";
 import type * as BabelTypes from "@babel/types";
-import { cva } from "class-variance-authority";
+import { cva, cx } from "class-variance-authority";
+import { twJoin, twMerge } from "tailwind-merge";
 import { tv } from "tailwind-variants";
 import type { CustomTheme } from "../../parser/index.js";
 import type { StyleObject } from "../../types/core.js";
@@ -37,7 +37,15 @@ export type VariantConfig = {
 };
 
 /**
- * Plugin state interface for variant processing
+ * Tracked class utility import info (matches state.ts)
+ */
+export type TrackedClassUtility = {
+  type: "tv" | "cva" | "twMerge" | "twJoin" | "cx";
+  originalName: string;
+};
+
+/**
+ * Plugin state interface for class utility processing
  */
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions
 export interface VariantProcessingState {
@@ -46,9 +54,8 @@ export interface VariantProcessingState {
   stylesIdentifier: string;
   // Track variant function definitions
   variantFunctions: Map<string, VariantFunctionEntry>;
-  // Track which imports are from tv/cva
-  tvImportNames: Set<string>;
-  cvaImportNames: Set<string>;
+  // Unified map of all tracked class utility imports
+  classUtilityImports: Map<string, TrackedClassUtility>;
 }
 
 /**
@@ -464,3 +471,80 @@ export function generateDynamicVariantExpression(
 
   return t.arrayExpression(elements);
 }
+
+/**
+ * Class joiner functions mapped by utility type
+ * - twMerge: Merges with conflict resolution (later classes win)
+ * - twJoin: Simple join without conflict resolution (faster)
+ * - cx: Alias for clsx, simple concatenation
+ */
+const CLASS_JOINERS: Record<"twMerge" | "twJoin" | "cx", (...classes: string[]) => string> = {
+  twMerge: (...classes) => twMerge(...classes),
+  twJoin: (...classes) => twJoin(...classes),
+  cx: (...classes) => cx(...classes),
+};
+
+/**
+ * Process a class joiner call site (twMerge, twJoin, cx)
+ * e.g., twMerge('px-2 py-1', 'p-4') -> _twStyles._merged_abc123
+ *
+ * Returns true if successful, false if dynamic/can't resolve
+ */
+export function processClassJoinerCall(
+  path: NodePath<BabelTypes.CallExpression>,
+  utilityType: "twMerge" | "twJoin" | "cx",
+  state: VariantProcessingState,
+  parseClassName: (className: string, customTheme?: CustomTheme) => StyleObject,
+  generateStyleKey: (className: string) => string,
+  t: typeof BabelTypes,
+): boolean {
+  const args = path.node.arguments;
+
+  // Extract all string arguments
+  const classStrings: string[] = [];
+
+  for (const arg of args) {
+    if (t.isStringLiteral(arg)) {
+      classStrings.push(arg.value);
+    } else if (t.isTemplateLiteral(arg) && arg.expressions.length === 0) {
+      // Static template literal with no expressions
+      classStrings.push(arg.quasis.map((q) => q.value.cooked ?? q.value.raw).join(""));
+    } else {
+      // Dynamic argument - can't resolve at compile time
+      return false;
+    }
+  }
+
+  if (classStrings.length === 0) {
+    return false;
+  }
+
+  // Use the appropriate joiner function at compile time
+  const joiner = CLASS_JOINERS[utilityType];
+  const mergedClasses = joiner(...classStrings);
+
+  if (!mergedClasses) {
+    return false;
+  }
+
+  // Parse to RN style
+  const styleObject = parseClassName(mergedClasses, state.customTheme);
+  const styleKey = generateStyleKey(mergedClasses);
+
+  // Register the style
+  state.styleRegistry.set(styleKey, styleObject);
+
+  // Replace the call with a style reference
+  path.replaceWith(t.memberExpression(t.identifier(state.stylesIdentifier), t.identifier(styleKey)));
+
+  return true;
+}
+
+// Backward compatibility alias
+export const processTwMergeCall = (
+  path: NodePath<BabelTypes.CallExpression>,
+  state: VariantProcessingState,
+  parseClassName: (className: string, customTheme?: CustomTheme) => StyleObject,
+  generateStyleKey: (className: string) => string,
+  t: typeof BabelTypes,
+): boolean => processClassJoinerCall(path, "twMerge", state, parseClassName, generateStyleKey, t);

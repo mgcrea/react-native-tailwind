@@ -42,16 +42,16 @@ export function programExit(
     removeTwImports(path, t);
   }
 
-  // Remove variant imports and definitions if they were processed
-  if (state.hasVariantDefinitions) {
+  // Remove class utility imports and definitions if they were processed
+  if (state.hasClassUtilityTransformations) {
     removeVariantImports(path, state, t);
     removeVariantDefinitions(path, state, t);
   }
 
-  // If no classNames/variants were found and no hooks/imports needed, skip processing
+  // If no classNames/utilities were found and no hooks/imports needed, skip processing
   if (
     !state.hasClassNames &&
-    !state.hasVariantDefinitions &&
+    !state.hasClassUtilityTransformations &&
     !state.needsWindowDimensionsImport &&
     !state.needsColorSchemeImport &&
     !state.needsI18nManagerImport
