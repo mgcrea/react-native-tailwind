@@ -93,5 +93,10 @@
       "esbuild",
       "unrs-resolver"
     ]
+  },
+  "dependencies": {
+    "class-variance-authority": "^0.7.1",
+    "tailwind-merge": "^3.4.0",
+    "tailwind-variants": "^3.2.2"
   }
 }

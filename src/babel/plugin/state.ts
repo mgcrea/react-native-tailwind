@@ -9,6 +9,44 @@ import type { StyleObject } from "../../types/core.js";
 import type { CustomTheme } from "../config-loader.js";
 import { extractCustomTheme } from "../config-loader.js";
 import { DEFAULT_CLASS_ATTRIBUTES, buildAttributeMatchers } from "../utils/attributeMatchers.js";
+import type { VariantFunctionEntry } from "../utils/variantProcessing.js";
+
+/**
+ * Types of class utilities we track and transform
+ *
+ * - "tv" / "cva": Variant function creators (create functions called later)
+ * - "twMerge": Class merger with conflict resolution
+ * - "twJoin" / "cx": Class joiners without conflict resolution
+ */
+export type ClassUtilityType = "tv" | "cva" | "twMerge" | "twJoin" | "cx";
+
+/**
+ * Tracked class utility import info
+ */
+export type TrackedClassUtility = {
+  type: ClassUtilityType;
+  originalName: string; // The actual import name (e.g., 'tv', 'twMerge')
+};
+
+/**
+ * Configuration for class utility imports to track
+ * Maps package name -> { exportName -> utilityType }
+ *
+ * Adding a new library or export is just one line here!
+ */
+export const CLASS_UTILITY_CONFIG: Record<string, Record<string, ClassUtilityType>> = {
+  "tailwind-variants": {
+    tv: "tv",
+  },
+  "class-variance-authority": {
+    cva: "cva",
+    cx: "cx", // Re-export of clsx for class concatenation
+  },
+  "tailwind-merge": {
+    twMerge: "twMerge", // Merge with conflict resolution
+    twJoin: "twJoin", // Join without conflict resolution (faster)
+  },
+};
 
 /**
  * Plugin options
@@ -121,6 +159,11 @@ export type PluginState = PluginPass & {
   functionComponentsNeedingColorScheme: Set<NodePath<BabelTypes.Function>>;
   // Track function components that need windowDimensions hook injection
   functionComponentsNeedingWindowDimensions: Set<NodePath<BabelTypes.Function>>;
+  // Track class utility imports (tv, cva, twMerge, etc.)
+  // Maps local name -> { type, originalName }
+  classUtilityImports: Map<string, TrackedClassUtility>;
+  variantFunctions: Map<string, VariantFunctionEntry>;
+  hasClassUtilityTransformations: boolean;
 };
 
 // Default identifier for the generated StyleSheet constant
@@ -181,5 +224,9 @@ export function createInitialState(
     reactNativeImportPath: undefined,
     functionComponentsNeedingColorScheme: new Set(),
     functionComponentsNeedingWindowDimensions: new Set(),
+    // Class utility support (tv, cva, twMerge)
+    classUtilityImports: new Map(),
+    variantFunctions: new Map(),
+    hasClassUtilityTransformations: false,
   };
 }
