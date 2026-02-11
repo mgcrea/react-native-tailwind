@@ -420,6 +420,23 @@ describe("isColorClass", () => {
     expect(isColorClass("border-black")).toBe(true);
   });
 
+  it("should return true for outline color classes", () => {
+    expect(isColorClass("outline-red-500")).toBe(true);
+    expect(isColorClass("outline-systemGray")).toBe(true);
+    expect(isColorClass("outline-black")).toBe(true);
+  });
+
+  it("should return false for non-color outline classes", () => {
+    expect(isColorClass("outline-none")).toBe(false);
+    expect(isColorClass("outline-solid")).toBe(false);
+    expect(isColorClass("outline-dashed")).toBe(false);
+    expect(isColorClass("outline-dotted")).toBe(false);
+    expect(isColorClass("outline-hidden")).toBe(false);
+    expect(isColorClass("outline-2")).toBe(false);
+    expect(isColorClass("outline-offset-2")).toBe(false);
+    expect(isColorClass("outline-[3px]")).toBe(false);
+  });
+
   it("should return false for non-color classes", () => {
     expect(isColorClass("m-4")).toBe(false);
     expect(isColorClass("p-2")).toBe(false);
@@ -549,6 +566,51 @@ describe("expandSchemeModifier", () => {
   it("should validate scheme variants without including the opacity suffix", () => {
     const modifier = { modifier: "scheme" as const, baseClass: "bg-missing/25" };
     expect(expandSchemeModifier(modifier, customColors)).toEqual([]);
+  });
+
+  it("should expand outline color scheme modifier", () => {
+    const modifier = { modifier: "scheme" as const, baseClass: "outline-primary" };
+    const result = expandSchemeModifier(modifier, customColors);
+
+    expect(result).toHaveLength(2);
+    expect((result as [ParsedModifier, ParsedModifier])[0]).toEqual({
+      modifier: "dark",
+      baseClass: "outline-primary-dark",
+    });
+    expect((result as [ParsedModifier, ParsedModifier])[1]).toEqual({
+      modifier: "light",
+      baseClass: "outline-primary-light",
+    });
+  });
+
+  it("should produce parsable outline color variants", () => {
+    const [dark, light] = expandSchemeModifier(
+      { modifier: "scheme", baseClass: "outline-primary" },
+      customColors,
+    );
+
+    expect(parseColor(dark.baseClass, customColors)).toEqual({ outlineColor: "#1E40AF" });
+    expect(parseColor(light.baseClass, customColors)).toEqual({ outlineColor: "#BFDBFE" });
+  });
+
+  it("should preserve integer and arbitrary opacity for scheme outline colors", () => {
+    expect(
+      expandSchemeModifier({ modifier: "scheme", baseClass: "outline-primary/25" }, customColors),
+    ).toEqual([
+      { modifier: "dark", baseClass: "outline-primary-dark/25" },
+      { modifier: "light", baseClass: "outline-primary-light/25" },
+    ]);
+
+    const [dark, light] = expandSchemeModifier(
+      { modifier: "scheme", baseClass: "outline-primary/[.37]" },
+      customColors,
+    );
+    expect(parseColor(dark.baseClass, customColors)).toEqual({
+      outlineColor: applyOpacity(customColors["primary-dark"], 37),
+    });
+    expect(parseColor(light.baseClass, customColors)).toEqual({
+      outlineColor: applyOpacity(customColors["primary-light"], 37),
+    });
   });
 
   it("should use custom suffixes when provided", () => {

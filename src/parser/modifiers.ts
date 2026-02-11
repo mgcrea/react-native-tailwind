@@ -174,9 +174,18 @@ export function isDirectionalModifier(modifier: ModifierType): modifier is Direc
  * Check if a class name is a color-based utility class
  *
  * @param className - Class name to check
- * @returns true if class is color-based (text-*, bg-*, border-*)
+ * @returns true if class is color-based (text-*, bg-*, border-*, outline-*)
  */
 export function isColorClass(className: string): boolean {
+  if (className.startsWith("outline-")) {
+    const value = className.substring(8);
+    const isStyle = ["solid", "dashed", "dotted", "none", "hidden"].includes(value);
+    const isWidthOrOffset = /^\d/.test(value) || value.startsWith("offset-");
+    const isNonColorArbitrary = value.startsWith("[") && !value.startsWith("[#");
+
+    return !isStyle && !isWidthOrOffset && !isNonColorArbitrary;
+  }
+
   return className.startsWith("text-") || className.startsWith("bg-") || className.startsWith("border-");
 }
 
@@ -213,7 +222,7 @@ export function expandSchemeModifier(
   if (!isColorClass(baseClass)) {
     if (process.env.NODE_ENV !== "production") {
       console.warn(
-        `[react-native-tailwind] scheme: modifier only supports color classes (text-*, bg-*, border-*). ` +
+        `[react-native-tailwind] scheme: modifier only supports color classes (text-*, bg-*, border-*, outline-*). ` +
           `Found: "${baseClass}". This modifier will be ignored.`,
       );
     }
@@ -222,7 +231,7 @@ export function expandSchemeModifier(
 
   // Extract the color name from the class
   // e.g., "text-systemGray" -> "systemGray"
-  const match = baseClass.match(/^(text|bg|border)-(.+)$/);
+  const match = baseClass.match(/^(text|bg|border|outline)-(.+)$/);
   if (!match) {
     return [];
   }

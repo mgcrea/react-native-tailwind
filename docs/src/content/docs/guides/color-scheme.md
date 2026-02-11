@@ -170,6 +170,7 @@ The `scheme:` modifier only works with color utilities:
 - ✅ `scheme:text-{color}` — Text colors
 - ✅ `scheme:bg-{color}` — Background colors
 - ✅ `scheme:border-{color}` — Border colors
+- ✅ `scheme:outline-{color}` — Outline colors
 - ❌ Other utilities — Ignored with development warning
 
 Opacity modifiers are preserved when the semantic color expands:
