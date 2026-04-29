@@ -35,11 +35,8 @@
   ],
   "scripts": {
     "dev": "cd example; npm run dev",
-    "build": "npm run build:babel && npm run build:babel-plugin && npm run build:runtime && npm run build:types",
-    "build:babel": "babel src --out-dir dist --extensions \".ts,.tsx,.js,.jsx\" --copy-files --ignore 'src/babel/**' --ignore '**/*.d.ts'",
-    "build:babel-plugin": "node --experimental-strip-types scripts/bundle-babel-plugin.ts",
-    "build:runtime": "node --experimental-strip-types scripts/bundle-runtime.ts",
-    "build:types": "tsc --project tsconfig.build.json --emitDeclarationOnly && node --experimental-strip-types scripts/post-build-types.ts",
+    "build": "tsdown",
+    "build:watch": "tsdown --watch",
     "install:ios": "cd ios && bundle exec pod install --repo-update && cd ..",
     "clean:ios": "cd ios && bundle exec pod deintegrate && rm -rf build Pods Podfile.lock && cd ..",
     "open:ios": "cd example; npm run open:ios",
@@ -56,9 +53,7 @@
     "react-native": "*"
   },
   "devDependencies": {
-    "@babel/cli": "^7.28.6",
     "@babel/core": "^7.29.0",
-    "@babel/plugin-transform-modules-commonjs": "^7.28.6",
     "@babel/preset-react": "^7.28.5",
     "@babel/preset-typescript": "^7.28.5",
     "@babel/runtime": "^7.28.6",
@@ -72,25 +67,24 @@
     "@types/react": "^19.2.14",
     "@vitest/coverage-v8": "^4.0.18",
     "babel-plugin-module-resolver": "^5.0.2",
-    "esbuild": "^0.27.3",
     "jest": "^30.2.0",
     "oxfmt": "^0.47.0",
     "oxlint": "^1.62.0",
     "react": "^19.2.4",
     "react-native": "0.84.0",
+    "tsdown": "^0.21.10",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
   },
   "engines": {
     "node": ">=18"
   },
-  "packageManager": "pnpm@10.29.3",
+  "packageManager": "pnpm@10.33.2",
   "publishConfig": {
     "access": "public"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-      "esbuild",
       "unrs-resolver"
     ]
   }

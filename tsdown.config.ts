@@ -1,0 +1,40 @@
+import { defineConfig } from "tsdown";
+
+export default defineConfig([
+  {
+    entry: ["src/index.ts"],
+    format: "esm",
+    outDir: "dist",
+    unbundle: true,
+    dts: true,
+    external: ["react", "react-native"],
+    target: "es2022",
+    platform: "neutral",
+    sourcemap: false,
+    clean: true,
+    copy: ["src/react-native.d.ts"],
+  },
+  {
+    entry: { "babel/index": "src/babel/index.ts" },
+    format: "cjs",
+    outDir: "dist",
+    outExtensions: () => ({ js: ".cjs" }),
+    dts: true,
+    external: ["@babel/core", "@babel/types", "@babel/runtime", "react-native"],
+    target: "node18",
+    platform: "node",
+    clean: false,
+  },
+  {
+    entry: { runtime: "src/runtime.ts" },
+    format: ["esm", "cjs"],
+    outDir: "dist",
+    dts: true,
+    external: ["react-native"],
+    target: "es2017",
+    platform: "neutral",
+    sourcemap: true,
+    minify: true,
+    clean: false,
+  },
+]);
