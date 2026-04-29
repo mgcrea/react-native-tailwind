@@ -4,6 +4,7 @@
 
 import type { NodePath } from "@babel/core";
 import type * as BabelTypes from "@babel/types";
+
 import type { ParsedModifier, StateModifierType } from "../../../parser/index.js";
 import {
   expandSchemeModifier,

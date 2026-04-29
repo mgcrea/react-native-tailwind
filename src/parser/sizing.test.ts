@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { SIZE_PERCENTAGES, SIZE_SCALE, parseSizing } from "./sizing";
 
 describe("SIZE_SCALE", () => {

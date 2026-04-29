@@ -1,5 +1,6 @@
 import { transformSync } from "@babel/core";
 import { describe, expect, it } from "vitest";
+
 import babelPlugin from "../plugin.js";
 
 /**

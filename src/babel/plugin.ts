@@ -5,6 +5,7 @@
 
 import type { PluginObj } from "@babel/core";
 import * as BabelTypes from "@babel/types";
+
 import { isComponentScope } from "./plugin/componentScope.js";
 import type { PluginOptions, PluginState } from "./plugin/state.js";
 import { createInitialState } from "./plugin/state.js";

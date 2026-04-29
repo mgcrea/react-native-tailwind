@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { COLORS, applyOpacity, parseArbitraryColor, parseColorValue } from "./colorUtils";
 
 describe("COLORS", () => {

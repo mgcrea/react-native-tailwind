@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { describe, expect, it, vi } from "vitest";
+
 import { transform } from "../../../../test/helpers/babelTransform.js";
 
 describe("className visitor - basic transformation", () => {

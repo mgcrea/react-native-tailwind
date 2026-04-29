@@ -22,6 +22,7 @@ import {
   TextInput as RNTextInput,
   type TextInputProps as RNTextInputProps,
 } from "react-native";
+
 import { type Simplify } from "../types/util";
 
 export type TextInputProps = Simplify<

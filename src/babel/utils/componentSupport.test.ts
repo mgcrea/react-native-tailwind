@@ -1,6 +1,7 @@
 import { parseSync } from "@babel/core";
 import * as t from "@babel/types";
 import { describe, expect, it } from "vitest";
+
 import { getComponentModifierSupport, getStatePropertyForModifier } from "./componentSupport";
 
 /**

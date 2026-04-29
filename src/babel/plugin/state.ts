@@ -4,6 +4,7 @@
 
 import type { NodePath, PluginPass } from "@babel/core";
 import type * as BabelTypes from "@babel/types";
+
 import type { SchemeModifierConfig } from "../../types/config.js";
 import type { StyleObject } from "../../types/core.js";
 import type { CustomTheme } from "../config-loader.js";

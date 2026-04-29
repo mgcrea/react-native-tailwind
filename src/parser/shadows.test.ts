@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { applyOpacity } from "../utils/colorUtils";
 import { SHADOW_COLORS, SHADOW_SCALE, parseShadow } from "./shadows";
 

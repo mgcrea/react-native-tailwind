@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import type { ParsedModifier } from "./modifiers";
 import {
   expandSchemeModifier,

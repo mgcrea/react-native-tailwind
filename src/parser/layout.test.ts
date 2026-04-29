@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { parseLayout } from "./layout";
 
 describe("parseLayout - display utilities", () => {

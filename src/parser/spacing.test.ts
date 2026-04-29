@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { SPACING_SCALE, parseSpacing } from "./spacing";
 
 describe("SPACING_SCALE", () => {

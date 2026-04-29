@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { describe, expect, it, vi } from "vitest";
+
 import { parsePlaceholderClass, parsePlaceholderClasses } from "./placeholder";
 
 describe("parsePlaceholderClass", () => {

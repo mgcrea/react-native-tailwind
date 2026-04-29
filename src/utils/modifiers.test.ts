@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { SUPPORTED_MODIFIERS, hasModifiers, splitModifierClasses } from "./modifiers";
 
 describe("SUPPORTED_MODIFIERS", () => {

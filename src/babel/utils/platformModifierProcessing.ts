@@ -3,6 +3,7 @@
  */
 
 import type * as BabelTypes from "@babel/types";
+
 import type { CustomTheme, ParsedModifier, PlatformModifierType } from "../../parser/index.js";
 import type { StyleObject } from "../../types/core.js";
 import { hasRuntimeDimensions } from "./windowDimensionsProcessing.js";

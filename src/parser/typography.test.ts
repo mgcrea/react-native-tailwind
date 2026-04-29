@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { FONT_SIZES, LETTER_SPACING_SCALE, parseTypography } from "./typography";
 
 describe("FONT_SIZES", () => {

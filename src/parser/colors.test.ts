@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { applyOpacity } from "../utils/colorUtils";
 import { COLORS, parseColor } from "./colors";
 

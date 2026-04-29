@@ -3,6 +3,7 @@
  */
 
 import type * as BabelTypes from "@babel/types";
+
 import type { ModifierType } from "../../parser/index.js";
 
 /**

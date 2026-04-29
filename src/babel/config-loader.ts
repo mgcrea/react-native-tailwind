@@ -7,6 +7,7 @@
 
 import * as fs from "fs";
 import * as path from "path";
+
 import { flattenColors } from "../utils/flattenColors";
 
 export type TailwindConfig = {

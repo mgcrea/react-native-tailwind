@@ -4,6 +4,7 @@
 
 import type { NodePath } from "@babel/core";
 import type * as BabelTypes from "@babel/types";
+
 import type { CustomTheme, ParsedModifier } from "../../parser/index.js";
 import type { SchemeModifierConfig } from "../../types/config.js";
 import type { StyleObject } from "../../types/core.js";

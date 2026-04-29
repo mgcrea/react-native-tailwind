@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { ASPECT_RATIO_PRESETS, parseAspectRatio } from "./aspectRatio";
 import { parseClassName } from "./index";
 
