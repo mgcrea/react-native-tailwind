@@ -1,0 +1,17 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "rules": {
+    "typescript/prefer-regexp-exec": "off",
+    "typescript/no-unnecessary-condition": "off",
+    "typescript/array-type": ["error", { "default": "array-simple" }],
+    "no-unused-vars": [
+      "error",
+      {
+        "varsIgnorePattern": "^_",
+        "argsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
+    ]
+  },
+  "ignorePatterns": [".idea", "dist", "example", "test", "docs"]
+}

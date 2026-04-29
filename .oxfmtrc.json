@@ -1,0 +1,12 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 111,
+  "sortImports": { "enabled": true },
+  "overrides": [
+    {
+      "files": ["**/*.json", "**/*.jsonc"],
+      "options": { "trailingComma": "none" }
+    }
+  ],
+  "ignorePatterns": ["dist", "coverage", "example", "docs", "pnpm-lock.yaml", "package-lock.json"]
+}
