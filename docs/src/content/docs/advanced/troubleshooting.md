@@ -107,7 +107,14 @@ If you see warnings about dynamic className:
 
 ### Understanding
 
-The Babel plugin only processes static strings at compile time. Runtime variables in class names can't be parsed.
+The Babel plugin processes static strings and a small set of dynamic AST shapes at compile time:
+
+- **String literal**: `"m-4 p-2"`
+- **Ternary**: `cond ? "a" : "b"`
+- **Template literal**: `` `m-4 ${cond ? "p-4" : "p-2"}` ``
+- **Logical AND**: `cond && "a"`
+
+Anything else (`||`, `??`, function calls like `cn(...)`, plain identifiers, member expressions, runtime-interpolated values) cannot be parsed at compile time.
 
 ### Solution
 
@@ -116,16 +123,49 @@ The Babel plugin only processes static strings at compile time. Runtime variable
 const spacing = 4;
 <View className={`p-${spacing}`} />
 
+// ❌ Doesn't work - || / ?? / cn() / variables
+<View className={cond || "p-4"} />
+<View className={cn("p-4", isActive && "bg-blue-500")} />
+
 // ✅ Use inline style for dynamic values
 <View className="border-2" style={{ padding: spacing * 4 }} />
 
 // ✅ Or use conditional expressions (hybrid optimization)
 <View className={spacing === 4 ? "p-4" : "p-8"} />
 
+// ✅ Convert || to a ternary
+<View className={cond ? "p-4" : ""} />
+
 // ✅ Or use runtime tw for fully dynamic needs
 import { tw } from "@mgcrea/react-native-tailwind/runtime";
 <View style={tw`p-${spacing}`} />
 ```
+
+### Warning fires on a *supported* shape (e.g. a ternary)?
+
+If you see this warning on an expression that **is** in the supported list above (most often a ternary on `className` or a `*ClassName` prop), the cause is almost always **plugin ordering** in your `babel.config.js`.
+
+Plugins that transform JSX — most commonly [`babel-plugin-react-compiler`](https://react.dev/reference/react-compiler) — must run **after** `@mgcrea/react-native-tailwind/babel`. If they run first, they restructure the AST in a way that breaks dynamic className detection.
+
+```javascript
+// babel.config.js
+module.exports = {
+  plugins: [
+    // ✅ react-native-tailwind FIRST
+    "@mgcrea/react-native-tailwind/babel",
+    // Then React Compiler
+    "babel-plugin-react-compiler",
+  ],
+};
+```
+
+After fixing the order, reset Metro's cache:
+
+```bash
+npx react-native start --reset-cache
+```
+
+See [Babel Configuration → Plugin Order](/react-native-tailwind/advanced/babel-configuration/#plugin-order) for details.
 
 ## State Modifiers Not Working
 

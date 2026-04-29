@@ -245,6 +245,52 @@ module.exports = function (api) {
 };
 ```
 
+## Plugin Order
+
+When combined with other Babel plugins that transform JSX (most notably [`babel-plugin-react-compiler`](https://react.dev/reference/react-compiler)), this plugin must run **first** in the `plugins` array.
+
+```javascript
+// babel.config.js
+module.exports = {
+  presets: ["module:@react-native/babel-preset"],
+  plugins: [
+    // ✅ react-native-tailwind first
+    [
+      "@mgcrea/react-native-tailwind/babel",
+      {
+        attributes: ["className", "*ClassName"],
+      },
+    ],
+
+    // Then React Compiler and any other JSX-transforming plugins
+    "babel-plugin-react-compiler",
+  ],
+};
+```
+
+### Why does order matter?
+
+Babel runs plugins in the order they appear in the `plugins` array, applied during the same AST traversal. If React Compiler runs first, it memoizes JSX expressions and may restructure dynamic `className` values (ternaries, template literals) in ways the tailwind plugin no longer recognizes.
+
+The most common symptom of incorrect ordering is this warning at build time, even when the expression is one of the supported shapes:
+
+```text
+[react-native-tailwind] Dynamic <attribute> values are not fully supported at <file>.
+Use the <attribute>Style prop for dynamic values.
+```
+
+For example, the following ternary is supported by this plugin, but will trigger the warning if React Compiler runs first:
+
+```tsx
+<FlatList contentContainerClassName={isEmpty ? "flex-grow" : undefined} />
+```
+
+Move `@mgcrea/react-native-tailwind/babel` above `babel-plugin-react-compiler` and the warning disappears.
+
+### Compatibility note
+
+The output of this plugin is fully compatible with React Compiler — `style` props referencing `StyleSheet.create()` keys are stable references that React Compiler can safely memoize. Running this plugin first means React Compiler operates on the post-transform JSX and memoizes the resulting `style={...}` expressions correctly.
+
 ## Clearing Cache
 
 After changing Babel configuration, clear Metro's cache:

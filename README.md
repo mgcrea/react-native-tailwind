@@ -87,6 +87,8 @@ module.exports = {
 };
 ```
 
+> **Plugin order matters.** If you also use [`babel-plugin-react-compiler`](https://react.dev/reference/react-compiler) or any other plugin that transforms JSX, list `@mgcrea/react-native-tailwind/babel` **first**. Otherwise, dynamic `className` expressions (ternaries, template literals) may trigger spurious "not fully supported" warnings. See [Plugin Order](https://mgcrea.github.io/react-native-tailwind/advanced/babel-configuration/#plugin-order) for details.
+
 ### 2. Enable TypeScript Support (Optional)
 
 Create a type declaration file to enable `className` prop autocomplete:
