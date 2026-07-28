@@ -102,6 +102,29 @@ describe("mergeStyles", () => {
     });
   });
 
+  describe("filter array merging", () => {
+    it("should compose different filter functions", () => {
+      const target = { filter: [{ blur: 8 }] };
+      const source = { filter: [{ brightness: 1.1 }] };
+      expect(mergeStyles(target, source)).toEqual({
+        filter: [{ blur: 8 }, { brightness: 1.1 }],
+      });
+    });
+
+    it("should replace the same filter function with the last value", () => {
+      const target = { filter: [{ brightness: 1.1 }, { blur: 8 }] };
+      const source = { filter: [{ brightness: 0.9 }] };
+      expect(mergeStyles(target, source)).toEqual({
+        filter: [{ brightness: 0.9 }, { blur: 8 }],
+      });
+    });
+
+    it("should clear filters when the source array is empty", () => {
+      const target = { filter: [{ brightness: 1.1 }, { blur: 8 }] };
+      expect(mergeStyles(target, { filter: [] })).toEqual({ filter: [] });
+    });
+  });
+
   describe("mixed properties", () => {
     it("should handle mix of standard and transform properties", () => {
       const target = { margin: 4, transform: [{ rotate: "45deg" }] };

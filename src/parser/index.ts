@@ -64,7 +64,7 @@ export function parseClass(cls: string, customTheme?: CustomTheme): StyleObject 
     (cls: string) => parseTypography(cls, customTheme?.fontFamily, customTheme?.fontSize),
     (cls: string) => parseSizing(cls, customTheme?.spacing),
     (cls: string) => parseShadow(cls, customTheme?.colors),
-    parseFilter,
+    (cls: string) => parseFilter(cls, customTheme?.colors),
     parseAspectRatio,
     (cls: string) => parseTransform(cls, customTheme?.spacing),
   ];

@@ -1,9 +1,9 @@
 /**
  * Smart merge utility for StyleObject values
- * Handles transform arrays with "last wins" semantics for same transform types
+ * Handles transform and filter arrays with "last wins" semantics for duplicate function types
  */
 
-import type { StyleObject, TransformStyle } from "../types/core";
+import type { FilterStyle, StyleObject, TransformStyle } from "../types/core";
 
 /**
  * Get the transform type key from a transform object
@@ -49,8 +49,37 @@ function mergeTransforms(target: TransformStyle[], source: TransformStyle[]): Tr
   return result;
 }
 
+function getFilterType(filter: FilterStyle): string {
+  return Object.keys(filter)[0];
+}
+
 /**
- * Merge two StyleObject instances, handling transform arrays specially
+ * Merge native filter arrays, composing different filter functions while the
+ * last utility wins for duplicate filter types.
+ */
+function mergeFilters(target: FilterStyle[], source: FilterStyle[]): FilterStyle[] {
+  if (source.length === 0) {
+    return [];
+  }
+
+  const result: FilterStyle[] = [...target];
+
+  for (const sourceFilter of source) {
+    const sourceType = getFilterType(sourceFilter);
+    const existingIndex = result.findIndex((filter) => getFilterType(filter) === sourceType);
+
+    if (existingIndex !== -1) {
+      result[existingIndex] = sourceFilter;
+    } else {
+      result.push(sourceFilter);
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Merge two StyleObject instances, handling transform and filter arrays specially
  *
  * @param target - The target object to merge into (mutated)
  * @param source - The source object to merge from
@@ -93,8 +122,16 @@ export function mergeStyles(target: StyleObject, source: StyleObject): StyleObje
           // No existing array, just assign
           target.transform = sourceTransforms;
         }
+      } else if (key === "filter" && Array.isArray(sourceValue)) {
+        const sourceFilters = sourceValue as FilterStyle[];
+        const targetValue = target.filter;
+        if (Array.isArray(targetValue)) {
+          target.filter = mergeFilters(targetValue, sourceFilters);
+        } else {
+          target.filter = sourceFilters;
+        }
       } else {
-        // Standard Object.assign behavior for non-transform properties
+        // Standard Object.assign behavior for scalar and object properties
         target[key] = sourceValue;
       }
     }

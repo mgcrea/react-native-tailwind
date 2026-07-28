@@ -18,7 +18,22 @@ export type TransformStyle =
   | { perspective?: number };
 
 export type ShadowOffsetStyle = { width: number; height: number };
-export type FilterStyle = { brightness: number };
+export type DropShadowStyle = {
+  offsetX: number;
+  offsetY: number;
+  standardDeviation?: number;
+  color?: string;
+};
+export type FilterStyle =
+  | { brightness: number }
+  | { blur: number }
+  | { contrast: number }
+  | { grayscale: number }
+  | { hueRotate: string }
+  | { invert: number }
+  | { saturate: number }
+  | { sepia: number }
+  | { dropShadow: DropShadowStyle };
 
 export type StyleObject = {
   [key: string]: string | number | ShadowOffsetStyle | TransformStyle[] | FilterStyle[] | undefined;
