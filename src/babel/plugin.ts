@@ -80,6 +80,8 @@ export default function reactNativeTailwindBabelPlugin(
                   const importedName = spec.imported.name;
                   if (importedName === "tw" || importedName === "twStyle") {
                     state.twImportNames.add(spec.local.name);
+                  } else if (importedName === "useTwStyle") {
+                    state.useTwStyleImportNames.add(spec.local.name);
                   }
                 }
               }
@@ -99,6 +101,7 @@ export default function reactNativeTailwindBabelPlugin(
                     state.supportedAttributes,
                     state.attributePatterns,
                     state.twImportNames,
+                    state.useTwStyleImportNames,
                     t,
                   )
                 ) {

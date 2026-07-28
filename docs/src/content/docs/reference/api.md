@@ -41,7 +41,7 @@ function parseClassName(
 
 ## useTwStyle
 
-Reactively resolve a module-level compiled `tw` or `twStyle` object with React Native's current color scheme:
+Reactively resolve a module-level compiled `tw` or `twStyle` object with the color-scheme hook configured in the Babel plugin:
 
 ```tsx
 import { tw, useTwStyle } from "@mgcrea/react-native-tailwind";
@@ -54,11 +54,11 @@ function Component() {
 }
 ```
 
-Call `useTwStyle` unconditionally inside a function component, like any React hook.
+Call `useTwStyle` unconditionally inside a function component, like any React hook. The Babel plugin injects the configured hook, including custom `colorScheme.importFrom` and `colorScheme.importName` providers.
 
 ## resolveTwStyle
 
-Resolve the same compiled object with an explicit scheme. Use this with custom theme hooks or controlled theme state:
+Resolve the same compiled object with an explicit scheme. Use this for controlled or imperative theme state when you already have a scheme value:
 
 ```tsx
 import { resolveTwStyle } from "@mgcrea/react-native-tailwind";

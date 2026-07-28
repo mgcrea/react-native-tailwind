@@ -149,9 +149,9 @@ const cardStyles = {
 };
 ```
 
-`useTwStyle` calls React Native's `useColorScheme`, so the consuming component re-renders and selects the matching variant when the system scheme changes. The module-level `style` property remains the base style; it is intentionally not a mutable global value.
+`useTwStyle` uses the color-scheme hook configured in the Babel plugin, including custom theme-provider hooks. The consuming component re-renders and selects the matching variant when that hook changes. The module-level `style` property remains the base style; it is intentionally not a mutable global value.
 
-For an application-specific theme hook, use the pure resolver:
+For an explicit or controlled scheme value, use the pure resolver:
 
 ```tsx
 import { resolveTwStyle } from "@mgcrea/react-native-tailwind";

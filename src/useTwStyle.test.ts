@@ -2,7 +2,7 @@ import type { ViewStyle } from "react-native";
 import { describe, expect, it } from "vitest";
 
 import type { TwStyle } from "./types/runtime";
-import { resolveTwStyle } from "./useTwStyle";
+import { resolveTwStyle, useTwStyle } from "./useTwStyle";
 
 const baseStyle: ViewStyle = { backgroundColor: "white" };
 const darkStyle: ViewStyle = { backgroundColor: "black" };
@@ -39,5 +39,11 @@ describe("resolveTwStyle", () => {
     const styles: TwStyle<ViewStyle> = { style: resolvedArray, darkStyle };
 
     expect(resolveTwStyle(styles, "dark")).toBe(resolvedArray);
+  });
+});
+
+describe("useTwStyle", () => {
+  it("should fail clearly when the Babel plugin did not inject the configured scheme", () => {
+    expect(() => useTwStyle(sharedStyles)).toThrow(/must be transformed.*configured color-scheme hook/);
   });
 });

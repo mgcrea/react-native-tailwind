@@ -115,6 +115,7 @@ export type PluginState = PluginPass & {
   stylesIdentifier: string;
   // Track tw/twStyle imports from main package
   twImportNames: Set<string>; // e.g., ['tw', 'twStyle'] or ['tw as customTw']
+  useTwStyleImportNames: Set<string>;
   hasTwImport: boolean;
   // Track react-native import path for conditional StyleSheet/Platform injection
   reactNativeImportPath?: NodePath<BabelTypes.ImportDeclaration>;
@@ -178,6 +179,7 @@ export function createInitialState(
     attributePatterns: patterns,
     stylesIdentifier,
     twImportNames: new Set(),
+    useTwStyleImportNames: new Set(),
     hasTwImport: false,
     reactNativeImportPath: undefined,
     functionComponentsNeedingColorScheme: new Set(),

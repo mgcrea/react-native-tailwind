@@ -1,4 +1,4 @@
-import { useColorScheme, type ColorSchemeName } from "react-native";
+import type { ColorSchemeName } from "react-native";
 
 import type { NativeStyle, TwStyle } from "./types/runtime";
 
@@ -30,10 +30,19 @@ export function resolveTwStyle<T extends NativeStyle>(
 }
 
 /**
- * Reactively resolve a module-level compiled TwStyle object with React
- * Native's current color scheme. Call this hook unconditionally inside a
- * function component.
+ * Reactively resolve a module-level compiled TwStyle object with the color
+ * scheme hook configured in the Babel plugin. The plugin injects the second
+ * argument at compile time.
  */
-export function useTwStyle<T extends NativeStyle>(styles: TwStyle<T>): ResolvedTwStyle<T> {
-  return resolveTwStyle(styles, useColorScheme());
+export function useTwStyle<T extends NativeStyle>(styles: TwStyle<T>): ResolvedTwStyle<T>;
+export function useTwStyle<T extends NativeStyle>(
+  styles: TwStyle<T>,
+  colorScheme?: TwColorScheme,
+): ResolvedTwStyle<T> {
+  if (arguments.length < 2) {
+    throw new Error(
+      "useTwStyle() must be transformed by @mgcrea/react-native-tailwind/babel so it can use the configured color-scheme hook.",
+    );
+  }
+  return resolveTwStyle(styles, colorScheme);
 }
