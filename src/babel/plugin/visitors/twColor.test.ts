@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { transform } from "../../../../test/helpers/babelTransform.js";
 import { COLORS } from "../../../parser/colors.js";
+import { applyOpacity } from "../../../utils/colorUtils.js";
 
 describe("twColor tag", () => {
   it("should compile a module-level static token to a string literal", () => {
@@ -26,6 +27,15 @@ describe("twColor tag", () => {
     expect(output).toContain('export const foreground = "#abcdef"');
     expect(output).not.toContain("twColor");
     expect(output).not.toContain("color`");
+  });
+
+  it("should support arbitrary opacity from the shared color grammar", () => {
+    const output = transform(`
+      import { twColor } from '@mgcrea/react-native-tailwind';
+      export const color = twColor\`blue-500/[.37]\`;
+    `);
+
+    expect(output).toContain('export const color = "#2B7FFF5E"');
   });
 
   it("should reject scheme tokens with an actionable useTwColor error", () => {
@@ -125,6 +135,43 @@ describe("raw color hooks", () => {
     expect(output).toContain('_twColorScheme === "dark"');
     expect(output).toContain(`? "${COLORS["gray-900"]}"`);
     expect(output).toContain(`: "${COLORS["gray-100"]}"`);
+  });
+
+  it("should compile scheme outline colors with arbitrary opacity", () => {
+    const output = transform(
+      `
+        import { useTwColor } from '@mgcrea/react-native-tailwind';
+        export function Component() {
+          return useTwColor('scheme:outline-gray/[.37]');
+        }
+      `,
+      { schemeModifier: { darkSuffix: "-900", lightSuffix: "-100" } },
+    );
+
+    expect(output).toContain(`? "${applyOpacity(COLORS["gray-900"], 37)}"`);
+    expect(output).toContain(`: "${applyOpacity(COLORS["gray-100"], 37)}"`);
+  });
+
+  it("should preserve TypeScript satisfies checks around direct static tokens", () => {
+    const output = transform(
+      `
+        import { useTwColor, useTwColors } from '@mgcrea/react-native-tailwind';
+        type AppColor = 'card' | 'text';
+        type AppSchemeColor = \`scheme:\${AppColor}\`;
+
+        export function Component() {
+          const card = useTwColor('scheme:gray' satisfies string);
+          const colors = useTwColors({ text: 'black' satisfies string });
+          return [card, colors.text];
+        }
+      `,
+      { schemeModifier: { darkSuffix: "-900", lightSuffix: "-100" } },
+      true,
+    );
+
+    expect(output).toContain(`? "${COLORS["gray-900"]}"`);
+    expect(output).toContain('text: "#000000"');
+    expect(output).not.toContain("satisfies");
   });
 
   it("should inject one scheme hook for a color object", () => {

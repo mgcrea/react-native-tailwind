@@ -61,6 +61,26 @@ function Screen() {
 
 Both helpers require static string literals and must be called unconditionally inside a function component. Unknown colors, unsupported modifiers, dynamic expressions, and module-scope calls produce a compile error. Utility-form tokens such as `bg-card` and `text-accent` are accepted, but raw palette names are preferred when the consumer needs only a string.
 
+### Type Checking Custom Theme Tokens
+
+The Babel plugin validates every token against the actual Tailwind configuration, but the exported TypeScript signature accepts `string` because a library declaration cannot automatically infer another project's Babel-loaded configuration or arbitrary-value grammar. Applications can keep config-derived autocomplete and typo checking with a direct `satisfies` expression:
+
+```tsx
+import tailwindConfig from "./tailwind.config";
+
+type ThemeColor = keyof typeof tailwindConfig.theme.extend.colors;
+type SchemeThemeColor = `scheme:${ThemeColor}`;
+
+function Card() {
+  const background = useTwColor("scheme:card" satisfies SchemeThemeColor);
+  const colors = useTwColors({
+    text: "scheme:text" satisfies SchemeThemeColor,
+  });
+}
+```
+
+TypeScript checks the literal against the application's config-derived union, then the Babel plugin removes the type-only expression and compiles the color normally. Keep the literal directly inside `useTwColor` or `useTwColors`; variables and wrapper functions are intentionally rejected so the compiler can prove the token statically.
+
 ## parseClassName
 
 Parse className strings to React Native styles:

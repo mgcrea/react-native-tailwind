@@ -20,6 +20,18 @@ function invalidTag(path: NodePath<BabelTypes.TaggedTemplateExpression>, message
   throw path.buildCodeFrameError(`[react-native-tailwind] ${message}`);
 }
 
+function getStaticStringLiteral(node: BabelTypes.Node, t: typeof BabelTypes): BabelTypes.StringLiteral | null {
+  if (t.isStringLiteral(node)) {
+    return node;
+  }
+
+  if (t.isTSAsExpression(node) || t.isTSSatisfiesExpression(node) || t.isTSTypeAssertion(node)) {
+    return getStaticStringLiteral(node.expression, t);
+  }
+
+  return null;
+}
+
 /** Compile static twColor`...` tokens to native color string literals. */
 export function twColorTaggedTemplateVisitor(
   path: NodePath<BabelTypes.TaggedTemplateExpression>,
@@ -84,13 +96,14 @@ export function twColorCallExpressionVisitor(
   let needsScheme = false;
 
   if (helper === "useTwColor") {
-    if (!t.isStringLiteral(argument)) {
+    const stringArgument = getStaticStringLiteral(argument, t);
+    if (!stringArgument) {
       invalidCall(path, "useTwColor() requires a static string literal.");
     }
 
-    const token = resolveTwColorToken(argument.value, state);
+    const token = resolveTwColorToken(stringArgument.value, state);
     if (!token) {
-      invalidCall(path, `Unknown or unsupported color token: "${argument.value}".`);
+      invalidCall(path, `Unknown or unsupported color token: "${stringArgument.value}".`);
     }
 
     needsScheme = token.kind === "scheme";
@@ -111,14 +124,18 @@ export function twColorCallExpressionVisitor(
         !t.isObjectProperty(property) ||
         property.computed ||
         (!t.isIdentifier(property.key) && !t.isStringLiteral(property.key)) ||
-        !t.isStringLiteral(property.value)
+        !getStaticStringLiteral(property.value, t)
       ) {
         invalidCall(path, "useTwColors() only supports plain object properties with static string values.");
       }
 
-      const token = resolveTwColorToken(property.value.value, state);
+      const stringValue = getStaticStringLiteral(property.value, t);
+      if (!stringValue) {
+        invalidCall(path, "useTwColors() only supports plain object properties with static string values.");
+      }
+      const token = resolveTwColorToken(stringValue.value, state);
       if (!token) {
-        invalidCall(path, `Unknown or unsupported color token: "${property.value.value}".`);
+        invalidCall(path, `Unknown or unsupported color token: "${stringValue.value}".`);
       }
       needsScheme ||= token.kind === "scheme";
       tokens.push({ property, token });
