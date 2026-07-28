@@ -12,6 +12,7 @@ Apply 2D and 3D transformations to views with React Native's transform API. All 
 ```tsx
 <View className="scale-0" />    // scale: 0
 <View className="scale-50" />   // scale: 0.5
+<View className="scale-80" />   // scale: 0.8
 <View className="scale-100" />  // scale: 1
 <View className="scale-110" />  // scale: 1.1
 <View className="scale-150" />  // scale: 1.5
@@ -22,12 +23,14 @@ Apply 2D and 3D transformations to views with React Native's transform API. All 
 ```tsx
 <View className="scale-x-110" /> // scaleX: 1.1
 <View className="scale-y-90" />  // scaleY: 0.9
+<View className="-scale-x-80" /> // scaleX: -0.8
 ```
 
 ### Arbitrary Values
 
 ```tsx
 <View className="scale-[1.23]" />   // scale: 1.23
+<View className="scale-[80%]" />    // scale: 0.8
 <View className="scale-x-[0.5]" />  // scaleX: 0.5
 <View className="scale-y-[2.5]" />  // scaleY: 2.5
 ```
