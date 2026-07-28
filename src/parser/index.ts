@@ -10,7 +10,7 @@ import { parseBorder } from "./borders";
 import { parseColor } from "./colors";
 import { parseLayout } from "./layout";
 import { parseOutline } from "./outline";
-import { parseRing } from "./rings";
+import { DEFAULT_RING_COLOR, parseRing } from "./rings";
 import { parseShadow } from "./shadows";
 import { parseSizing } from "./sizing";
 import { parseSpacing } from "./spacing";
@@ -40,6 +40,13 @@ export function parseClassName(className: string, customTheme?: CustomTheme): St
   for (const cls of classes) {
     const parsedStyle = parseClass(cls, customTheme);
     mergeStyles(style, parsedStyle);
+  }
+
+  // Width-only browser rings inherit the default focus color. Apply this
+  // after parsing so an explicit ring color wins regardless of class order.
+  const hasRingWidth = classes.some((cls) => parseRing(cls, customTheme?.colors)?.outlineWidth !== undefined);
+  if (hasRingWidth && style.outlineColor === undefined) {
+    style.outlineColor = DEFAULT_RING_COLOR;
   }
 
   return style;

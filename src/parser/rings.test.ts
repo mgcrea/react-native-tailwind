@@ -67,6 +67,14 @@ describe("parseRing", () => {
     });
   });
 
+  it("should inherit the browser-blue color for width-only rings", () => {
+    expect(parseClassName("ring-2")).toEqual({
+      outlineWidth: 2,
+      outlineStyle: "solid",
+      outlineColor: DEFAULT_RING_COLOR,
+    });
+  });
+
   it("should preserve a ring color declared before its width", () => {
     expect(parseClassName("ring-red-500 ring-2")).toEqual({
       outlineColor: "#fb2c36",
