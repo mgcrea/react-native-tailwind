@@ -89,6 +89,18 @@ Control layout with flexbox, positioning, and display utilities.
 <View className="overflow-scroll" />  // overflow: 'scroll'
 ```
 
+## Opacity
+
+Named opacity utilities use the existing five-point percentage scale. Use an arbitrary raw value or percentage for an exact value:
+
+```tsx
+<View className="opacity-65" />       // opacity: 0.65
+<View className="opacity-[.67]" />    // opacity: 0.67
+<View className="opacity-[67%]" />    // opacity: 0.67
+```
+
+Arbitrary values must resolve to React Native's supported range from `0` through `1`.
+
 ## Display
 
 ```tsx

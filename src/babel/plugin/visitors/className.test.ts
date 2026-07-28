@@ -23,6 +23,20 @@ describe("className visitor - basic transformation", () => {
     expect(output).toContain("style:");
   });
 
+  it("should compile arbitrary opacity values", () => {
+    const input = `
+      import { View } from 'react-native';
+      export function Component() {
+        return <View className="opacity-[.67]" />;
+      }
+    `;
+
+    const output = transform(input, undefined, true);
+
+    expect(output).not.toContain("className");
+    expect(output).toContain("opacity: 0.67");
+  });
+
   it("should work with both tw and className in same file", () => {
     const input = `
       import { tw } from '@mgcrea/react-native-tailwind';
