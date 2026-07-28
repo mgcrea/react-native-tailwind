@@ -7,7 +7,19 @@ Access the parser and constants programmatically for advanced use cases.
 
 ## Compile-Time Raw Colors
 
-Use `useTwColor` when a React Native API needs a color string instead of a `style` object, such as navigation options, gradients, SVG, or Skia:
+Use `twColor` for a static color string that can be declared at module scope. It accepts the same palette names, utility-form names, slash opacity, and arbitrary hex values as color utilities:
+
+```tsx
+import { twColor } from "@mgcrea/react-native-tailwind";
+
+const blue = twColor`blue-500`;
+const translucentBlue = twColor`blue-500/35`;
+const customHex = twColor`[#50d71e]`;
+```
+
+Each tag is replaced with a string literal and has no runtime cost. Interpolations and `scheme:` tokens produce a compile error. A static tag cannot react to a runtime color scheme, so use `useTwColor` for scheme-aware colors.
+
+Use `useTwColor` when a React Native API needs a reactive color string instead of a `style` object, such as navigation options, gradients, SVG, or Skia:
 
 ```tsx
 import { useTwColor, useTwColors } from "@mgcrea/react-native-tailwind";
@@ -19,12 +31,11 @@ function Header() {
 }
 ```
 
-Raw tokens use the same configured palette as color classes. Prefix a token with `scheme:` to resolve its configured light and dark variants reactively:
+Hook tokens use the same configured palette as color classes. Prefix a token with `scheme:` to resolve its configured light and dark variants reactively:
 
 ```tsx
 const card = useTwColor("scheme:card");
-const translucentBlue = useTwColor("blue-500/35");
-const customHex = useTwColor("[#50d71e]");
+const fallback = useTwColor("blue-500");
 ```
 
 The Babel plugin replaces each call with literal color strings. Scheme tokens reuse the plugin's configured `colorScheme` hook, including custom application theme hooks.
@@ -211,7 +222,7 @@ function ThemedComponent() {
 
 ## Important Notes
 
-- `useTwColor` and `useTwColors` are compile-time APIs; `parseClassName` parses styles at runtime
+- `twColor`, `useTwColor`, and `useTwColors` are compile-time APIs; `parseClassName` parses styles at runtime
 - For production apps, prefer using `className` prop for compile-time optimization
 - Use the programmatic API for:
   - Testing

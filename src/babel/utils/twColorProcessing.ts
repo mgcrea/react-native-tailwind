@@ -133,7 +133,9 @@ export function removeTwColorImports(path: NodePath<BabelTypes.Program>, t: type
       const remainingSpecifiers = importPath.node.specifiers.filter((specifier) => {
         if (t.isImportSpecifier(specifier) && t.isIdentifier(specifier.imported)) {
           const isTwColorHelper =
-            specifier.imported.name === "useTwColor" || specifier.imported.name === "useTwColors";
+            specifier.imported.name === "twColor" ||
+            specifier.imported.name === "useTwColor" ||
+            specifier.imported.name === "useTwColors";
           if (!isTwColorHelper) {
             return true;
           }

@@ -116,7 +116,7 @@ export type PluginState = PluginPass & {
   // Track tw/twStyle imports from main package
   twImportNames: Set<string>; // e.g., ['tw', 'twStyle'] or ['tw as customTw']
   hasTwImport: boolean;
-  twColorImportNames: Map<string, "useTwColor" | "useTwColors">;
+  twColorImportNames: Map<string, "twColor" | "useTwColor" | "useTwColors">;
   hasTwColorImport: boolean;
   // Track react-native import path for conditional StyleSheet/Platform injection
   reactNativeImportPath?: NodePath<BabelTypes.ImportDeclaration>;

@@ -13,7 +13,7 @@ import { jsxAttributeVisitor } from "./plugin/visitors/className.js";
 import { importDeclarationVisitor } from "./plugin/visitors/imports.js";
 import { programEnter, programExit } from "./plugin/visitors/program.js";
 import { callExpressionVisitor, taggedTemplateVisitor } from "./plugin/visitors/tw.js";
-import { twColorCallExpressionVisitor } from "./plugin/visitors/twColor.js";
+import { twColorCallExpressionVisitor, twColorTaggedTemplateVisitor } from "./plugin/visitors/twColor.js";
 import { scanForColorSchemeModifiers } from "./utils/preInjection.js";
 import { injectColorSchemeHook } from "./utils/styleInjection.js";
 
@@ -81,7 +81,11 @@ export default function reactNativeTailwindBabelPlugin(
                   const importedName = spec.imported.name;
                   if (importedName === "tw" || importedName === "twStyle") {
                     state.twImportNames.add(spec.local.name);
-                  } else if (importedName === "useTwColor" || importedName === "useTwColors") {
+                  } else if (
+                    importedName === "twColor" ||
+                    importedName === "useTwColor" ||
+                    importedName === "useTwColors"
+                  ) {
                     state.twColorImportNames.set(spec.local.name, importedName);
                   }
                 }
@@ -103,7 +107,11 @@ export default function reactNativeTailwindBabelPlugin(
                     state.attributePatterns,
                     state.twImportNames,
                     t,
-                    new Set(state.twColorImportNames.keys()),
+                    new Set(
+                      [...state.twColorImportNames]
+                        .filter(([, helper]) => helper !== "twColor")
+                        .map(([localName]) => localName),
+                    ),
                   )
                 ) {
                   injectColorSchemeHook(
@@ -134,6 +142,7 @@ export default function reactNativeTailwindBabelPlugin(
 
       TaggedTemplateExpression(path, state) {
         taggedTemplateVisitor(path, state, t);
+        twColorTaggedTemplateVisitor(path, state, t);
       },
 
       CallExpression(path, state) {

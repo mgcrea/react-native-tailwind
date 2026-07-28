@@ -6,10 +6,15 @@
  */
 
 const transformError =
-  "useTwColor/useTwColors must be transformed by the Babel plugin. " +
+  "twColor/useTwColor/useTwColors must be transformed by the Babel plugin. " +
   "Ensure @mgcrea/react-native-tailwind/babel is configured in your babel.config.js.";
 
 /** Resolve one static theme token to a native color string at compile time. */
+export function twColor(_strings: TemplateStringsArray, ..._values: unknown[]): string {
+  throw new Error(transformError);
+}
+
+/** Resolve one reactive theme token to a native color string at compile time. */
 export function useTwColor(_token: string): string {
   throw new Error(transformError);
 }

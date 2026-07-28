@@ -16,6 +16,46 @@ function invalidCall(path: NodePath<BabelTypes.CallExpression>, message: string)
   throw path.buildCodeFrameError(`[react-native-tailwind] ${message}`);
 }
 
+function invalidTag(path: NodePath<BabelTypes.TaggedTemplateExpression>, message: string): never {
+  throw path.buildCodeFrameError(`[react-native-tailwind] ${message}`);
+}
+
+/** Compile static twColor`...` tokens to native color string literals. */
+export function twColorTaggedTemplateVisitor(
+  path: NodePath<BabelTypes.TaggedTemplateExpression>,
+  state: PluginState,
+  t: typeof BabelTypes,
+): void {
+  if (!t.isIdentifier(path.node.tag) || state.twColorImportNames.get(path.node.tag.name) !== "twColor") {
+    return;
+  }
+
+  if (path.node.quasi.expressions.length > 0) {
+    invalidTag(path, "twColor`...` only supports one static color token without interpolations.");
+  }
+
+  const tokenValue = path.node.quasi.quasis[0]?.value.cooked?.trim() ?? "";
+  if (!tokenValue) {
+    invalidTag(path, "twColor`...` requires one static color token.");
+  }
+
+  if (tokenValue.startsWith("scheme:")) {
+    invalidTag(
+      path,
+      `twColor\`${tokenValue}\` cannot resolve a runtime color scheme. ` +
+        `Use useTwColor("${tokenValue}") inside a function component.`,
+    );
+  }
+
+  const token = resolveTwColorToken(tokenValue, state);
+  if (!token || token.kind !== "static") {
+    invalidTag(path, `Unknown or unsupported color token: "${tokenValue}".`);
+  }
+
+  path.replaceWith(t.stringLiteral(token.color));
+  state.hasTwColorImport = true;
+}
+
 export function twColorCallExpressionVisitor(
   path: NodePath<BabelTypes.CallExpression>,
   state: PluginState,
@@ -28,6 +68,10 @@ export function twColorCallExpressionVisitor(
   const helper = state.twColorImportNames.get(path.node.callee.name);
   if (!helper) {
     return;
+  }
+
+  if (helper === "twColor") {
+    invalidCall(path, "twColor must be used as a tagged template: twColor`blue-500`.");
   }
 
   if (path.node.arguments.length !== 1) {

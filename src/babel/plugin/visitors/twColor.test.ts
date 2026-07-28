@@ -3,6 +3,72 @@ import { describe, expect, it } from "vitest";
 import { transform } from "../../../../test/helpers/babelTransform.js";
 import { COLORS } from "../../../parser/colors.js";
 
+describe("twColor tag", () => {
+  it("should compile a module-level static token to a string literal", () => {
+    const output = transform(`
+      import { twColor } from '@mgcrea/react-native-tailwind';
+      export const color = twColor\`blue-500\`;
+    `);
+
+    expect(output).toContain(`export const color = "${COLORS["blue-500"]}"`);
+    expect(output).not.toContain("twColor");
+    expect(output).not.toContain("useColorScheme");
+  });
+
+  it("should support utility-form tokens, opacity, arbitrary hex, and aliased imports", () => {
+    const output = transform(`
+      import { twColor as color } from '@mgcrea/react-native-tailwind';
+      export const background = color\`bg-red-500/35\`;
+      export const foreground = color\`[#abcdef]\`;
+    `);
+
+    expect(output).toContain('export const background = "#FB2C3659"');
+    expect(output).toContain('export const foreground = "#abcdef"');
+    expect(output).not.toContain("twColor");
+    expect(output).not.toContain("color`");
+  });
+
+  it("should reject scheme tokens with an actionable useTwColor error", () => {
+    expect(() =>
+      transform(`
+        import { twColor } from '@mgcrea/react-native-tailwind';
+        export const color = twColor\`scheme:not-configured\`;
+      `),
+    ).toThrow(/cannot resolve a runtime color scheme.*Use useTwColor/);
+  });
+
+  it("should reject interpolations, empty tags, unknown colors, and function-call syntax", () => {
+    expect(() =>
+      transform(`
+        import { twColor } from '@mgcrea/react-native-tailwind';
+        const shade = 500;
+        export const color = twColor\`blue-\${shade}\`;
+      `),
+    ).toThrow(/without interpolations/);
+
+    expect(() =>
+      transform(`
+        import { twColor } from '@mgcrea/react-native-tailwind';
+        export const color = twColor\`\`;
+      `),
+    ).toThrow(/requires one static color token/);
+
+    expect(() =>
+      transform(`
+        import { twColor } from '@mgcrea/react-native-tailwind';
+        export const color = twColor\`not-a-real-color\`;
+      `),
+    ).toThrow(/Unknown or unsupported color token/);
+
+    expect(() =>
+      transform(`
+        import { twColor } from '@mgcrea/react-native-tailwind';
+        export const color = twColor('blue-500');
+      `),
+    ).toThrow(/must be used as a tagged template/);
+  });
+});
+
 describe("raw color hooks", () => {
   it("should compile a static color token to a string literal", () => {
     const output = transform(`
