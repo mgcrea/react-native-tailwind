@@ -10,6 +10,7 @@ import { parseBorder } from "./borders";
 import { parseColor } from "./colors";
 import { parseLayout } from "./layout";
 import { parseOutline } from "./outline";
+import { DEFAULT_RING_COLOR, parseRing } from "./rings";
 import { parseShadow } from "./shadows";
 import { parseSizing } from "./sizing";
 import { parseSpacing } from "./spacing";
@@ -41,6 +42,13 @@ export function parseClassName(className: string, customTheme?: CustomTheme): St
     mergeStyles(style, parsedStyle);
   }
 
+  // Width-only browser rings inherit the default focus color. Apply this
+  // after parsing so an explicit ring color wins regardless of class order.
+  const hasRingWidth = classes.some((cls) => parseRing(cls, customTheme?.colors)?.outlineWidth !== undefined);
+  if (hasRingWidth && style.outlineColor === undefined) {
+    style.outlineColor = DEFAULT_RING_COLOR;
+  }
+
   return style;
 }
 
@@ -58,6 +66,7 @@ export function parseClass(cls: string, customTheme?: CustomTheme): StyleObject 
     (cls: string) => parseSpacing(cls, customTheme?.spacing),
     (cls: string) => parseBorder(cls, customTheme?.colors),
     parseOutline,
+    (cls: string) => parseRing(cls, customTheme?.colors),
     (cls: string) => parseColor(cls, customTheme?.colors),
     (cls: string) => parseLayout(cls, customTheme?.spacing),
     (cls: string) => parseTypography(cls, customTheme?.fontFamily, customTheme?.fontSize),
@@ -89,6 +98,7 @@ export { parseBorder } from "./borders";
 export { parseColor } from "./colors";
 export { parseLayout } from "./layout";
 export { parseOutline } from "./outline";
+export { parseRing } from "./rings";
 export { parsePlaceholderClass, parsePlaceholderClasses } from "./placeholder";
 export { parseShadow } from "./shadows";
 export { parseSizing } from "./sizing";

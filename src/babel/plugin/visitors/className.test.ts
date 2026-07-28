@@ -23,6 +23,23 @@ describe("className visitor - basic transformation", () => {
     expect(output).toContain("style:");
   });
 
+  it("should transform composed ring utilities", () => {
+    const input = `
+      import { View } from 'react-native';
+      export function Component() {
+        return <View className="ring-2 ring-red-500 ring-offset-1" />;
+      }
+    `;
+
+    const output = transform(input, undefined, true);
+
+    expect(output).not.toContain("className");
+    expect(output).toMatch(/outlineWidth:\s*2/);
+    expect(output).toMatch(/outlineStyle:\s*["']solid["']/);
+    expect(output).toMatch(/outlineColor:\s*["']#fb2c36["']/);
+    expect(output).toMatch(/outlineOffset:\s*1/);
+  });
+
   it("should work with both tw and className in same file", () => {
     const input = `
       import { tw } from '@mgcrea/react-native-tailwind';
