@@ -26,6 +26,7 @@ export {
   parseColor,
   parseLayout,
   parseOutline,
+  parseRing,
   parsePlaceholderClass,
   parsePlaceholderClasses,
   parseShadow,
@@ -37,6 +38,7 @@ export {
 // Re-export constants for customization
 export { ASPECT_RATIO_PRESETS } from "./parser/aspectRatio";
 export { COLORS } from "./parser/colors";
+export { DEFAULT_RING_COLOR, DEFAULT_RING_WIDTH } from "./parser/rings";
 export { INSET_SCALE, Z_INDEX_SCALE } from "./parser/layout";
 export { SHADOW_SCALE } from "./parser/shadows";
 export { SIZE_PERCENTAGES, SIZE_SCALE } from "./parser/sizing";
