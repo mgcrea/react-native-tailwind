@@ -134,7 +134,8 @@ export function processTwCall(
       if (process.env.NODE_ENV !== "production") {
         console.warn(
           `[react-native-tailwind] Color scheme modifiers (dark:, light:) in tw/twStyle calls ` +
-            `must be used inside a React component. Modifiers will be ignored.`,
+            `cannot resolve automatically outside a React component. ` +
+            `darkStyle/lightStyle variants were generated; use useTwStyle() or resolveTwStyle() inside the consumer.`,
         );
       }
     } else {
@@ -182,9 +183,12 @@ export function processTwCall(
 
     // Replace style property with array
     objectProperties[0] = t.objectProperty(t.identifier("style"), t.arrayExpression(styleArrayElements));
+  }
 
-    // Also add darkStyle/lightStyle properties for manual processing
-    // (e.g., extracting raw hex values for Reanimated animations)
+  // Always expose darkStyle/lightStyle variants. Inside components the style
+  // property is also reactive; outside components these variants can be
+  // resolved by useTwStyle() or resolveTwStyle() at the consumption site.
+  if (hasColorSchemeModifiers) {
     const darkModifiers = colorSchemeModifiers.filter((m) => m.modifier === "dark");
     const lightModifiers = colorSchemeModifiers.filter((m) => m.modifier === "light");
 

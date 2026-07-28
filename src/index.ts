@@ -11,10 +11,12 @@ export { parseClass, parseClassName } from "./parser";
 export { flattenColors } from "./utils/flattenColors";
 export { mergeStyles } from "./utils/mergeStyles";
 export { generateStyleKey } from "./utils/styleKey";
+export { resolveTwStyle, useTwStyle } from "./useTwStyle";
 
 // Re-export types
 export type { StyleObject } from "./types/core";
 export type { NativeStyle, TwStyle } from "./types/runtime";
+export type { ResolvedTwStyle, TwColorScheme } from "./useTwStyle";
 
 // Re-export colors
 export { TAILWIND_COLORS } from "./config/tailwind";
