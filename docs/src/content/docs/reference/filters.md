@@ -119,10 +119,11 @@ Different filter utilities compile into one ordered native filter array. If the 
 // filter: [{ brightness: 0.9 }]
 ```
 
-Use `filter-none` to clear filters that appear before it:
+Use `filter-none` to clear all composable filters on the same element. It wins regardless of class-string order, matching Tailwind's generated CSS:
 
 ```tsx
 <View className="blur-sm brightness-110 filter-none" /> // filter: []
+<View className="filter-none blur-sm brightness-110" /> // filter: []
 ```
 
 Unsupported units, malformed drop shadows, and negative values where React Native requires non-negative amounts are ignored with a development warning.
