@@ -84,13 +84,14 @@ export function mergeStyles(target: StyleObject, source: StyleObject): StyleObje
 
       // Handle transform arrays specially
       if (key === "transform" && Array.isArray(sourceValue)) {
-        const targetValue = target[key];
+        const sourceTransforms = sourceValue as TransformStyle[];
+        const targetValue = target.transform;
         if (Array.isArray(targetValue)) {
           // Merge transforms with "last wins" for same types
-          target.transform = mergeTransforms(targetValue, sourceValue);
+          target.transform = mergeTransforms(targetValue, sourceTransforms);
         } else {
           // No existing array, just assign
-          target[key] = sourceValue;
+          target.transform = sourceTransforms;
         }
       } else {
         // Standard Object.assign behavior for non-transform properties

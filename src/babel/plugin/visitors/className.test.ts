@@ -23,6 +23,21 @@ describe("className visitor - basic transformation", () => {
     expect(output).toContain("style:");
   });
 
+  it("should transform brightness filters", () => {
+    const input = `
+      import { View } from 'react-native';
+      export function Component() {
+        return <View className="brightness-[1.01]" />;
+      }
+    `;
+
+    const output = transform(input, undefined, true);
+
+    expect(output).not.toContain("className");
+    expect(output).toContain("_brightness_1_01");
+    expect(output).toMatch(/filter:\s*\[\s*{\s*brightness:\s*1\.01/);
+  });
+
   it("should work with both tw and className in same file", () => {
     const input = `
       import { tw } from '@mgcrea/react-native-tailwind';

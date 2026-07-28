@@ -8,6 +8,7 @@ import { mergeStyles } from "../utils/mergeStyles";
 import { parseAspectRatio } from "./aspectRatio";
 import { parseBorder } from "./borders";
 import { parseColor } from "./colors";
+import { parseFilter } from "./filters";
 import { parseLayout } from "./layout";
 import { parseOutline } from "./outline";
 import { parseShadow } from "./shadows";
@@ -63,6 +64,7 @@ export function parseClass(cls: string, customTheme?: CustomTheme): StyleObject 
     (cls: string) => parseTypography(cls, customTheme?.fontFamily, customTheme?.fontSize),
     (cls: string) => parseSizing(cls, customTheme?.spacing),
     (cls: string) => parseShadow(cls, customTheme?.colors),
+    parseFilter,
     parseAspectRatio,
     (cls: string) => parseTransform(cls, customTheme?.spacing),
   ];
@@ -87,6 +89,7 @@ export function parseClass(cls: string, customTheme?: CustomTheme): StyleObject 
 export { parseAspectRatio } from "./aspectRatio";
 export { parseBorder } from "./borders";
 export { parseColor } from "./colors";
+export { parseFilter } from "./filters";
 export { parseLayout } from "./layout";
 export { parseOutline } from "./outline";
 export { parsePlaceholderClass, parsePlaceholderClasses } from "./placeholder";

@@ -18,9 +18,11 @@ export type TransformStyle =
   | { perspective?: number };
 
 export type ShadowOffsetStyle = { width: number; height: number };
+export type FilterStyle = { brightness: number };
 
 export type StyleObject = {
-  [key: string]: string | number | ShadowOffsetStyle | TransformStyle[] | undefined;
+  [key: string]: string | number | ShadowOffsetStyle | TransformStyle[] | FilterStyle[] | undefined;
+  filter?: FilterStyle[];
   shadowOffset?: ShadowOffsetStyle;
   transform?: TransformStyle[];
 };

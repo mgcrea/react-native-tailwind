@@ -24,6 +24,7 @@ export {
   parseAspectRatio,
   parseBorder,
   parseColor,
+  parseFilter,
   parseLayout,
   parseOutline,
   parsePlaceholderClass,
