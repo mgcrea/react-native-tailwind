@@ -70,7 +70,7 @@ function parseArbitrarySpacing(value: string): number | null {
 
 /**
  * Parse spacing classes (margin, padding, gap)
- * Examples: m-4, mx-2, mt-8, p-4, px-2, pt-8, gap-4, m-[16px], pl-[4.5px], -m-4, -mt-[10px], ms-4, pe-2, mx-auto
+ * Examples: m-4, mx-2, mt-8, p-4, px-2, pt-8, gap-4, gap-x-2, gap-y-1.5, m-[16px], pl-[4.5px], -m-4, -mt-[10px], ms-4, pe-2, mx-auto
  * @param cls - The class name to parse
  * @param customSpacing - Optional custom spacing values from tailwind.config
  */
@@ -128,25 +128,35 @@ export function parseSpacing(cls: string, customSpacing?: Record<string, number>
     }
   }
 
-  // Gap: gap-4, gap-[16px]
-  const gapMatch = cls.match(/^gap-(.+)$/);
+  // Gap: gap-4, gap-x-2, gap-y-1.5, gap-[16px]
+  const gapMatch = cls.match(/^gap(?:-([xy]))?-(.+)$/);
   if (gapMatch) {
-    const valueStr = gapMatch[1];
+    const [, direction = "", valueStr] = gapMatch;
 
     // Try arbitrary value first (highest priority)
     const arbitraryValue = parseArbitrarySpacing(valueStr);
     if (arbitraryValue !== null) {
-      return { gap: arbitraryValue };
+      return getGapStyle(direction, arbitraryValue);
     }
 
     // Try spacing scale (includes custom spacing)
     const scaleValue = spacingMap[valueStr];
     if (scaleValue !== undefined) {
-      return { gap: scaleValue };
+      return getGapStyle(direction, scaleValue);
     }
   }
 
   return null;
+}
+
+/**
+ * Get gap style object based on Tailwind's gap direction.
+ * gap-x controls spacing between columns; gap-y controls spacing between rows.
+ */
+function getGapStyle(direction: string, value: number): StyleObject {
+  if (direction === "x") return { columnGap: value };
+  if (direction === "y") return { rowGap: value };
+  return { gap: value };
 }
 
 /**

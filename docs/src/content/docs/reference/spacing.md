@@ -72,6 +72,18 @@ Control spacing between flex items:
 </View>
 ```
 
+Use directional gaps to control the horizontal and vertical axes independently:
+
+```tsx
+<View className="flex-row flex-wrap gap-x-2 gap-y-1.5">
+  {/* columnGap: 8, rowGap: 6 */}
+</View>
+
+<View className="gap-x-[12px] gap-y-[4.5px]">
+  {/* columnGap: 12, rowGap: 4.5 */}
+</View>
+```
+
 ## Available Sizes
 
 Spacing values follow a scale where `1` = 4px:
@@ -122,6 +134,8 @@ Use arbitrary values for custom spacing not in the preset scale:
 <View className="p-[20px]" />   // padding: 20
 <View className="mx-[24px]" />  // marginHorizontal: 24
 <View className="gap-[12px]" /> // gap: 12
+<View className="gap-x-[12px]" /> // columnGap: 12
+<View className="gap-y-[6px]" />  // rowGap: 6
 ```
 
 :::note
