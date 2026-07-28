@@ -320,6 +320,21 @@ describe("parseColor - opacity modifiers", () => {
     expect(parseColor("border-[#abc]/60")).toEqual({ borderColor: "#AABBCC99" });
   });
 
+  it("should handle arbitrary raw and percentage opacity modifiers", () => {
+    expect(parseColor("bg-black/[.37]")).toEqual({ backgroundColor: "#0000005E" });
+    expect(parseColor("text-white/[37%]")).toEqual({ color: "#FFFFFF5E" });
+    expect(parseColor("border-red-500/[.5]")).toEqual({
+      borderColor: applyOpacity(COLORS["red-500"], 50),
+    });
+  });
+
+  it("should multiply opacity for colors with an existing alpha channel", () => {
+    expect(parseColor("bg-[#edecf7af]/25")).toEqual({ backgroundColor: "#EDECF72C" });
+    expect(parseColor("text-translucent/[.5]", { translucent: "#11223380" })).toEqual({
+      color: "#11223340",
+    });
+  });
+
   it("should handle opacity modifier with custom colors", () => {
     const customColors = { "brand-primary": "#FF6B6B" };
     expect(parseColor("bg-brand-primary/50", customColors)).toEqual({ backgroundColor: "#FF6B6B80" });
@@ -355,6 +370,8 @@ describe("parseColor - opacity modifiers", () => {
     expect(parseColor("bg-black/101")).toBeNull(); // > 100
     expect(parseColor("bg-black/-1")).toBeNull(); // < 0
     expect(parseColor("bg-black/150")).toBeNull(); // Way over 100
+    expect(parseColor("bg-black/[1.1]")).toBeNull();
+    expect(parseColor("bg-black/[101%]")).toBeNull();
   });
 
   it("should return null for malformed opacity syntax", () => {

@@ -6,6 +6,8 @@
  * - Directional modifiers: rtl:, ltr: (RTL-aware styling)
  */
 
+import { parseColorOpacityModifier } from "../utils/colorUtils";
+
 export type StateModifierType = "active" | "hover" | "focus" | "disabled" | "placeholder";
 export type PlatformModifierType = "ios" | "android" | "web";
 export type ColorSchemeModifierType = "dark" | "light";
@@ -225,7 +227,10 @@ export function expandSchemeModifier(
     return [];
   }
 
-  const [, prefix, colorName] = match;
+  const [, prefix, colorWithOpacity] = match;
+  const opacityModifier = parseColorOpacityModifier(colorWithOpacity);
+  const colorName = opacityModifier?.baseColorKey ?? colorWithOpacity;
+  const opacitySuffix = opacityModifier?.suffix ?? "";
 
   // Build variant class names
   const darkColorName = `${colorName}${darkSuffix}`;
@@ -252,11 +257,11 @@ export function expandSchemeModifier(
   return [
     {
       modifier: "dark" as ColorSchemeModifierType,
-      baseClass: `${prefix}-${darkColorName}`,
+      baseClass: `${prefix}-${darkColorName}${opacitySuffix}`,
     },
     {
       modifier: "light" as ColorSchemeModifierType,
-      baseClass: `${prefix}-${lightColorName}`,
+      baseClass: `${prefix}-${lightColorName}${opacitySuffix}`,
     },
   ];
 }
