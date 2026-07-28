@@ -5,6 +5,51 @@ description: Access the parser and constants programmatically
 
 Access the parser and constants programmatically for advanced use cases.
 
+## Compile-Time Raw Colors
+
+Use `useTwColor` when a React Native API needs a color string instead of a `style` object, such as navigation options, gradients, SVG, or Skia:
+
+```tsx
+import { useTwColor, useTwColors } from "@mgcrea/react-native-tailwind";
+
+function Header() {
+  const tintColor = useTwColor("scheme:accent");
+
+  return <Icon color={tintColor} />;
+}
+```
+
+Raw tokens use the same configured palette as color classes. Prefix a token with `scheme:` to resolve its configured light and dark variants reactively:
+
+```tsx
+const card = useTwColor("scheme:card");
+const translucentBlue = useTwColor("blue-500/35");
+const customHex = useTwColor("[#50d71e]");
+```
+
+The Babel plugin replaces each call with literal color strings. Scheme tokens reuse the plugin's configured `colorScheme` hook, including custom application theme hooks.
+When that hook returns `"dark"`, the dark variant is used; `"light"`, `null`, and other non-dark values use the light variant, matching the default light appearance before a dark preference is active.
+
+Use `useTwColors` to resolve several named colors with one injected scheme hook:
+
+```tsx
+function Screen() {
+  const colors = useTwColors({
+    background: "scheme:background",
+    text: "scheme:text",
+    accent: "accent",
+  });
+
+  return (
+    <LinearGradient colors={[colors.background, colors.accent]}>
+      <Text style={{ color: colors.text }}>Hello</Text>
+    </LinearGradient>
+  );
+}
+```
+
+Both helpers require static string literals and must be called unconditionally inside a function component. Unknown colors, unsupported modifiers, dynamic expressions, and module-scope calls produce a compile error. Utility-form tokens such as `bg-card` and `text-accent` are accepted, but raw palette names are preferred when the consumer needs only a string.
+
 ## parseClassName
 
 Parse className strings to React Native styles:
@@ -166,7 +211,7 @@ function ThemedComponent() {
 
 ## Important Notes
 
-- The programmatic API parses styles at **runtime**, not compile-time
+- `useTwColor` and `useTwColors` are compile-time APIs; `parseClassName` parses styles at runtime
 - For production apps, prefer using `className` prop for compile-time optimization
 - Use the programmatic API for:
   - Testing

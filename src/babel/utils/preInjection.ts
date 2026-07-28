@@ -26,8 +26,9 @@ export function scanForColorSchemeModifiers(
   attributePatterns: RegExp[],
   twImportNames: Set<string>,
   t: typeof BabelTypes,
+  twColorImportNames: Set<string> = new Set(),
 ): boolean {
-  return walkNode(node, supportedAttributes, attributePatterns, twImportNames, t);
+  return walkNode(node, supportedAttributes, attributePatterns, twImportNames, t, twColorImportNames);
 }
 
 function walkNode(
@@ -36,6 +37,7 @@ function walkNode(
   attributePatterns: RegExp[],
   twImportNames: Set<string>,
   t: typeof BabelTypes,
+  twColorImportNames: Set<string>,
 ): boolean {
   // Check JSXAttribute with color scheme class names
   if (t.isJSXAttribute(node) && t.isJSXIdentifier(node.name)) {
@@ -65,6 +67,24 @@ function walkNode(
         return true;
       }
     }
+
+    if (twColorImportNames.has(node.callee.name)) {
+      const arg = node.arguments[0];
+      if (t.isStringLiteral(arg) && COLOR_SCHEME_PATTERN.test(arg.value)) {
+        return true;
+      }
+      if (t.isObjectExpression(arg)) {
+        for (const property of arg.properties) {
+          if (
+            t.isObjectProperty(property) &&
+            t.isStringLiteral(property.value) &&
+            COLOR_SCHEME_PATTERN.test(property.value.value)
+          ) {
+            return true;
+          }
+        }
+      }
+    }
   }
 
   // Walk children, skipping nested functions
@@ -80,7 +100,7 @@ function walkNode(
         if (isASTNode(item)) {
           // Skip nested functions (they have their own scope)
           if (t.isFunction(item)) continue;
-          if (walkNode(item, supportedAttributes, attributePatterns, twImportNames, t)) {
+          if (walkNode(item, supportedAttributes, attributePatterns, twImportNames, t, twColorImportNames)) {
             return true;
           }
         }
@@ -88,7 +108,7 @@ function walkNode(
     } else if (isASTNode(child)) {
       // Skip nested functions
       if (t.isFunction(child)) continue;
-      if (walkNode(child, supportedAttributes, attributePatterns, twImportNames, t)) {
+      if (walkNode(child, supportedAttributes, attributePatterns, twImportNames, t, twColorImportNames)) {
         return true;
       }
     }
