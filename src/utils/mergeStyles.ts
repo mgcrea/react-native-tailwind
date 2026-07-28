@@ -1,9 +1,9 @@
 /**
  * Smart merge utility for StyleObject values
- * Handles transform arrays with "last wins" semantics for same transform types
+ * Handles transform and filter arrays with "last wins" semantics for duplicate function types
  */
 
-import type { StyleObject, TransformStyle } from "../types/core";
+import type { FilterStyle, StyleObject, TransformStyle } from "../types/core";
 
 /**
  * Get the transform type key from a transform object
@@ -49,8 +49,60 @@ function mergeTransforms(target: TransformStyle[], source: TransformStyle[]): Tr
   return result;
 }
 
+function getFilterType(filter: FilterStyle): string {
+  return Object.keys(filter)[0];
+}
+
+// Tailwind composes independent filter utilities into one declaration in this
+// order. Native filter arrays are order-sensitive, so preserve the same order
+// regardless of class ordering.
+const FILTER_ORDER = [
+  "blur",
+  "brightness",
+  "contrast",
+  "grayscale",
+  "hueRotate",
+  "invert",
+  "saturate",
+  "sepia",
+  "dropShadow",
+] as const;
+
+function sortFilters(filters: FilterStyle[]): FilterStyle[] {
+  return filters.sort((left, right) => {
+    const leftIndex = FILTER_ORDER.indexOf(getFilterType(left) as (typeof FILTER_ORDER)[number]);
+    const rightIndex = FILTER_ORDER.indexOf(getFilterType(right) as (typeof FILTER_ORDER)[number]);
+    return leftIndex - rightIndex;
+  });
+}
+
 /**
- * Merge two StyleObject instances, handling transform arrays specially
+ * Merge native filter arrays, composing different filter functions while the
+ * last utility wins for duplicate filter types.
+ */
+function mergeFilters(target: FilterStyle[], source: FilterStyle[]): FilterStyle[] {
+  if (source.length === 0) {
+    return [];
+  }
+
+  const result: FilterStyle[] = [...target];
+
+  for (const sourceFilter of source) {
+    const sourceType = getFilterType(sourceFilter);
+    const existingIndex = result.findIndex((filter) => getFilterType(filter) === sourceType);
+
+    if (existingIndex !== -1) {
+      result[existingIndex] = sourceFilter;
+    } else {
+      result.push(sourceFilter);
+    }
+  }
+
+  return sortFilters(result);
+}
+
+/**
+ * Merge two StyleObject instances, handling transform and filter arrays specially
  *
  * @param target - The target object to merge into (mutated)
  * @param source - The source object to merge from
@@ -84,16 +136,25 @@ export function mergeStyles(target: StyleObject, source: StyleObject): StyleObje
 
       // Handle transform arrays specially
       if (key === "transform" && Array.isArray(sourceValue)) {
-        const targetValue = target[key];
+        const sourceTransforms = sourceValue as TransformStyle[];
+        const targetValue = target.transform;
         if (Array.isArray(targetValue)) {
           // Merge transforms with "last wins" for same types
-          target.transform = mergeTransforms(targetValue, sourceValue);
+          target.transform = mergeTransforms(targetValue, sourceTransforms);
         } else {
           // No existing array, just assign
-          target[key] = sourceValue;
+          target.transform = sourceTransforms;
+        }
+      } else if (key === "filter" && Array.isArray(sourceValue)) {
+        const sourceFilters = sourceValue as FilterStyle[];
+        const targetValue = target.filter;
+        if (Array.isArray(targetValue)) {
+          target.filter = mergeFilters(targetValue, sourceFilters);
+        } else {
+          target.filter = sourceFilters;
         }
       } else {
-        // Standard Object.assign behavior for non-transform properties
+        // Standard Object.assign behavior for scalar and object properties
         target[key] = sourceValue;
       }
     }

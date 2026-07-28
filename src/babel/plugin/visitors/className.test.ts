@@ -23,6 +23,38 @@ describe("className visitor - basic transformation", () => {
     expect(output).toContain("style:");
   });
 
+  it("should transform brightness filters", () => {
+    const input = `
+      import { View } from 'react-native';
+      export function Component() {
+        return <View className="brightness-[1.01]" />;
+      }
+    `;
+
+    const output = transform(input, undefined, true);
+
+    expect(output).not.toContain("className");
+    expect(output).toContain("_brightness_1_01");
+    expect(output).toMatch(/filter:\s*\[\s*{\s*brightness:\s*1\.01/);
+  });
+
+  it("should transform composed and structured filters", () => {
+    const input = `
+      import { View } from 'react-native';
+      export function Component() {
+        return <View className="blur-sm hue-rotate-45 drop-shadow-[0_4px_4px_#00000080]" />;
+      }
+    `;
+
+    const output = transform(input, undefined, true);
+
+    expect(output).not.toContain("className");
+    expect(output).toMatch(/blur:\s*8/);
+    expect(output).toMatch(/hueRotate:\s*["']45deg["']/);
+    expect(output).toMatch(/dropShadow:\s*{\s*offsetX:\s*0,\s*offsetY:\s*4/);
+    expect(output).toContain('color: "#00000080"');
+  });
+
   it("should work with both tw and className in same file", () => {
     const input = `
       import { tw } from '@mgcrea/react-native-tailwind';

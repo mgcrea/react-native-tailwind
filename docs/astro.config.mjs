@@ -57,6 +57,7 @@ export default defineConfig({
             { label: "Borders", slug: "reference/borders" },
             { label: "Outlines", slug: "reference/outlines" },
             { label: "Shadows & Elevation", slug: "reference/shadows" },
+            { label: "Filters", slug: "reference/filters" },
             { label: "Aspect Ratio", slug: "reference/aspect-ratio" },
             { label: "Transforms", slug: "reference/transforms" },
             { label: "Sizing", slug: "reference/sizing" },

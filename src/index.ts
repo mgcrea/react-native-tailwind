@@ -13,7 +13,7 @@ export { mergeStyles } from "./utils/mergeStyles";
 export { generateStyleKey } from "./utils/styleKey";
 
 // Re-export types
-export type { StyleObject } from "./types/core";
+export type { DropShadowStyle, FilterStyle, StyleObject } from "./types/core";
 export type { NativeStyle, TwStyle } from "./types/runtime";
 
 // Re-export colors
@@ -24,6 +24,7 @@ export {
   parseAspectRatio,
   parseBorder,
   parseColor,
+  parseFilter,
   parseLayout,
   parseOutline,
   parsePlaceholderClass,
@@ -37,6 +38,7 @@ export {
 // Re-export constants for customization
 export { ASPECT_RATIO_PRESETS } from "./parser/aspectRatio";
 export { COLORS } from "./parser/colors";
+export { BLUR_SCALE, DROP_SHADOW_SCALE } from "./parser/filters";
 export { INSET_SCALE, Z_INDEX_SCALE } from "./parser/layout";
 export { SHADOW_SCALE } from "./parser/shadows";
 export { SIZE_PERCENTAGES, SIZE_SCALE } from "./parser/sizing";
