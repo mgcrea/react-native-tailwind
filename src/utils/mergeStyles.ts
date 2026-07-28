@@ -53,6 +53,29 @@ function getFilterType(filter: FilterStyle): string {
   return Object.keys(filter)[0];
 }
 
+// Tailwind composes independent filter utilities into one declaration in this
+// order. Native filter arrays are order-sensitive, so preserve the same order
+// regardless of class ordering.
+const FILTER_ORDER = [
+  "blur",
+  "brightness",
+  "contrast",
+  "grayscale",
+  "hueRotate",
+  "invert",
+  "saturate",
+  "sepia",
+  "dropShadow",
+] as const;
+
+function sortFilters(filters: FilterStyle[]): FilterStyle[] {
+  return filters.sort((left, right) => {
+    const leftIndex = FILTER_ORDER.indexOf(getFilterType(left) as (typeof FILTER_ORDER)[number]);
+    const rightIndex = FILTER_ORDER.indexOf(getFilterType(right) as (typeof FILTER_ORDER)[number]);
+    return leftIndex - rightIndex;
+  });
+}
+
 /**
  * Merge native filter arrays, composing different filter functions while the
  * last utility wins for duplicate filter types.
@@ -75,7 +98,7 @@ function mergeFilters(target: FilterStyle[], source: FilterStyle[]): FilterStyle
     }
   }
 
-  return result;
+  return sortFilters(result);
 }
 
 /**

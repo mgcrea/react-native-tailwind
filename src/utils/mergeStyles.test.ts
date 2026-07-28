@@ -104,8 +104,8 @@ describe("mergeStyles", () => {
 
   describe("filter array merging", () => {
     it("should compose different filter functions", () => {
-      const target = { filter: [{ blur: 8 }] };
-      const source = { filter: [{ brightness: 1.1 }] };
+      const target = { filter: [{ brightness: 1.1 }] };
+      const source = { filter: [{ blur: 8 }] };
       expect(mergeStyles(target, source)).toEqual({
         filter: [{ blur: 8 }, { brightness: 1.1 }],
       });
@@ -115,13 +115,26 @@ describe("mergeStyles", () => {
       const target = { filter: [{ brightness: 1.1 }, { blur: 8 }] };
       const source = { filter: [{ brightness: 0.9 }] };
       expect(mergeStyles(target, source)).toEqual({
-        filter: [{ brightness: 0.9 }, { blur: 8 }],
+        filter: [{ blur: 8 }, { brightness: 0.9 }],
       });
     });
 
     it("should clear filters when the source array is empty", () => {
       const target = { filter: [{ brightness: 1.1 }, { blur: 8 }] };
       expect(mergeStyles(target, { filter: [] })).toEqual({ filter: [] });
+    });
+
+    it("should use Tailwind's canonical order for composed filters", () => {
+      const target = { filter: [{ dropShadow: { offsetX: 0, offsetY: 1 } }, { sepia: 1 }] };
+      const source = { filter: [{ hueRotate: "45deg" }, { contrast: 1.25 }] };
+      expect(mergeStyles(target, source)).toEqual({
+        filter: [
+          { contrast: 1.25 },
+          { hueRotate: "45deg" },
+          { sepia: 1 },
+          { dropShadow: { offsetX: 0, offsetY: 1 } },
+        ],
+      });
     });
   });
 

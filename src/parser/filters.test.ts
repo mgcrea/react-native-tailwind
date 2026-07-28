@@ -103,12 +103,28 @@ describe("parseFilter - composition and validation", () => {
 
   it("should use the last utility for duplicate filter functions", () => {
     expect(parseClassName("brightness-110 blur-sm brightness-90")).toEqual({
-      filter: [{ brightness: 0.9 }, { blur: 8 }],
+      filter: [{ blur: 8 }, { brightness: 0.9 }],
     });
   });
 
   it("should clear preceding filters with filter-none", () => {
     expect(parseClassName("brightness-110 blur-sm filter-none")).toEqual({ filter: [] });
+  });
+
+  it("should let filter-none win regardless of class order", () => {
+    expect(parseClassName("filter-none brightness-110 blur-sm")).toEqual({ filter: [] });
+  });
+
+  it("should compose filters in Tailwind's canonical order", () => {
+    expect(parseClassName("drop-shadow-md sepia hue-rotate-45 brightness-110 blur-sm")).toEqual({
+      filter: [
+        { blur: 8 },
+        { brightness: 1.1 },
+        { hueRotate: "45deg" },
+        { sepia: 1 },
+        { dropShadow: DROP_SHADOW_SCALE.md },
+      ],
+    });
   });
 
   it("should compose native opacity with filters without a class collision", () => {

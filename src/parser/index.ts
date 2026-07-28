@@ -42,6 +42,12 @@ export function parseClassName(className: string, customTheme?: CustomTheme): St
     mergeStyles(style, parsedStyle);
   }
 
+  // Tailwind emits filter-none after composable filter utilities, so it wins
+  // regardless of the order of classes in markup.
+  if (classes.includes("filter-none")) {
+    style.filter = [];
+  }
+
   return style;
 }
 
