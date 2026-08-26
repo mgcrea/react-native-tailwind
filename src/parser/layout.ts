@@ -85,6 +85,33 @@ function parseArbitraryGrowShrink(value: string): number | null {
   return null;
 }
 
+/**
+ * Parse an arbitrary opacity value: [.67], [0.67], [1], [67%].
+ * React Native expects a normalized number from 0 to 1.
+ */
+function parseArbitraryOpacity(value: string): number | null {
+  const match = value.match(/^\[(\d+(?:\.\d*)?|\.\d+)(%)?\]$/);
+  if (match) {
+    const parsed = Number.parseFloat(match[1]);
+    const opacity = match[2] === "%" ? parsed / 100 : parsed;
+    if (opacity >= 0 && opacity <= 1) {
+      return opacity;
+    }
+  }
+
+  if (value.startsWith("[") && value.endsWith("]")) {
+    /* v8 ignore next 5 */
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(
+        `[react-native-tailwind] Invalid arbitrary opacity value: ${value}. ` +
+          "Use a raw value from 0 to 1 or a percentage from 0% to 100% (e.g., [.67], [0.67], [67%]).",
+      );
+    }
+  }
+
+  return null;
+}
+
 // Display utilities
 const DISPLAY_MAP: Record<string, StyleObject> = {
   flex: { display: "flex" },
@@ -243,6 +270,13 @@ export const INSET_SCALE: Record<string, number> = {
 export function parseLayout(cls: string, customSpacing?: Record<string, number>): StyleObject | null {
   // Merge custom spacing with defaults for inset utilities
   const insetMap = customSpacing ? { ...INSET_SCALE, ...customSpacing } : INSET_SCALE;
+
+  if (cls.startsWith("opacity-")) {
+    const arbitraryOpacity = parseArbitraryOpacity(cls.substring(8));
+    if (arbitraryOpacity !== null) {
+      return { opacity: arbitraryOpacity };
+    }
+  }
 
   // Z-index: z-0, z-10, z-20, z-[999], etc.
   if (cls.startsWith("z-")) {

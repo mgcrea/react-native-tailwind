@@ -294,6 +294,21 @@ describe("parseLayout - opacity utilities", () => {
     expect(parseLayout("opacity-90")).toEqual({ opacity: 0.9 });
     expect(parseLayout("opacity-95")).toEqual({ opacity: 0.95 });
   });
+
+  it("should parse arbitrary raw and percentage opacity values", () => {
+    expect(parseLayout("opacity-[.67]")).toEqual({ opacity: 0.67 });
+    expect(parseLayout("opacity-[0.125]")).toEqual({ opacity: 0.125 });
+    expect(parseLayout("opacity-[1]")).toEqual({ opacity: 1 });
+    expect(parseLayout("opacity-[67%]")).toEqual({ opacity: 0.67 });
+    expect(parseLayout("opacity-[12.5%]")).toEqual({ opacity: 0.125 });
+  });
+
+  it("should reject arbitrary opacity outside the native range", () => {
+    expect(parseLayout("opacity-[1.1]")).toBeNull();
+    expect(parseLayout("opacity-[101%]")).toBeNull();
+    expect(parseLayout("opacity-[-.1]")).toBeNull();
+    expect(parseLayout("opacity-[invalid]")).toBeNull();
+  });
 });
 
 describe("parseLayout - edge cases", () => {
