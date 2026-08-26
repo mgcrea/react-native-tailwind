@@ -14,6 +14,15 @@ import type * as BabelTypes from "@babel/types";
 
 const COLOR_SCHEME_PATTERN = /(?:^|\s)(?:dark:|light:|scheme:)/;
 
+function getStaticStringValue(node: BabelTypes.Node | undefined, t: typeof BabelTypes): string | null {
+  if (!node) return null;
+  if (t.isStringLiteral(node)) return node.value;
+  if (t.isTSAsExpression(node) || t.isTSSatisfiesExpression(node) || t.isTSTypeAssertion(node)) {
+    return getStaticStringValue(node.expression, t);
+  }
+  return null;
+}
+
 /**
  * Scan an AST node tree for color scheme modifiers in class name contexts.
  *
@@ -26,8 +35,9 @@ export function scanForColorSchemeModifiers(
   attributePatterns: RegExp[],
   twImportNames: Set<string>,
   t: typeof BabelTypes,
+  twColorImportNames: Set<string> = new Set(),
 ): boolean {
-  return walkNode(node, supportedAttributes, attributePatterns, twImportNames, t);
+  return walkNode(node, supportedAttributes, attributePatterns, twImportNames, t, twColorImportNames);
 }
 
 function walkNode(
@@ -36,6 +46,7 @@ function walkNode(
   attributePatterns: RegExp[],
   twImportNames: Set<string>,
   t: typeof BabelTypes,
+  twColorImportNames: Set<string>,
 ): boolean {
   // Check JSXAttribute with color scheme class names
   if (t.isJSXAttribute(node) && t.isJSXIdentifier(node.name)) {
@@ -65,6 +76,22 @@ function walkNode(
         return true;
       }
     }
+
+    if (twColorImportNames.has(node.callee.name)) {
+      const arg = node.arguments[0];
+      const token = arg && !t.isArgumentPlaceholder(arg) ? getStaticStringValue(arg, t) : null;
+      if (token && COLOR_SCHEME_PATTERN.test(token)) {
+        return true;
+      }
+      if (t.isObjectExpression(arg)) {
+        for (const property of arg.properties) {
+          const propertyToken = t.isObjectProperty(property) ? getStaticStringValue(property.value, t) : null;
+          if (propertyToken && COLOR_SCHEME_PATTERN.test(propertyToken)) {
+            return true;
+          }
+        }
+      }
+    }
   }
 
   // Walk children, skipping nested functions
@@ -80,7 +107,7 @@ function walkNode(
         if (isASTNode(item)) {
           // Skip nested functions (they have their own scope)
           if (t.isFunction(item)) continue;
-          if (walkNode(item, supportedAttributes, attributePatterns, twImportNames, t)) {
+          if (walkNode(item, supportedAttributes, attributePatterns, twImportNames, t, twColorImportNames)) {
             return true;
           }
         }
@@ -88,7 +115,7 @@ function walkNode(
     } else if (isASTNode(child)) {
       // Skip nested functions
       if (t.isFunction(child)) continue;
-      if (walkNode(child, supportedAttributes, attributePatterns, twImportNames, t)) {
+      if (walkNode(child, supportedAttributes, attributePatterns, twImportNames, t, twColorImportNames)) {
         return true;
       }
     }

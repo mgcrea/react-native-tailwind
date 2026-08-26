@@ -16,6 +16,7 @@ import {
   injectStylesAtTop,
   injectWindowDimensionsHook,
 } from "../../utils/styleInjection.js";
+import { removeTwColorImports } from "../../utils/twColorProcessing.js";
 import { removeTwImports } from "../../utils/twProcessing.js";
 import type { PluginState } from "../state.js";
 
@@ -40,6 +41,9 @@ export function programExit(
   // Remove tw/twStyle imports if they were used (and transformed)
   if (state.hasTwImport) {
     removeTwImports(path, t);
+  }
+  if (state.hasTwColorImport) {
+    removeTwColorImports(path, t);
   }
 
   // If no classNames were found and no hooks/imports needed, skip processing

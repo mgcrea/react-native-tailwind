@@ -24,6 +24,8 @@ Utilities for controlling the outline style of an element.
 <View className="outline-blue-500" />    // outlineColor: '#3B82F6'
 <View className="outline-[#ff0000]" />   // outlineColor: '#ff0000'
 <View className="outline-red-500/50" />  // outlineColor: '#EF4444' (50% opacity)
+<View className="dark:outline-gray-200" />  // Theme-aware outline color
+<View className="scheme:outline-brand" />   // Expands to light/dark variants
 ```
 
 ## Outline Style

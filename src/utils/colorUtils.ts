@@ -16,8 +16,9 @@ export const COLORS: Record<string, string> = {
 };
 
 /**
- * Apply opacity to hex color by appending alpha channel
- * @param hex - Hex color string (e.g., "#ff0000", "#f00", or "transparent")
+ * Apply opacity to a hex color. Existing alpha is multiplied, matching
+ * Tailwind's color-mix-with-transparent semantics.
+ * @param hex - Hex color string (e.g., "#ff0000", "#f00", "#ff000080", or "transparent")
  * @param opacity - Opacity value 0-100 (e.g., 50 for 50%)
  * @returns 8-digit hex with alpha (e.g., "#FF000080") or transparent
  */
@@ -27,7 +28,7 @@ export function applyOpacity(hex: string, opacity: number): string {
   }
 
   const cleanHex = hex.replace(/^#/, "");
-  const fullHex =
+  const normalizedHex =
     cleanHex.length === 3
       ? cleanHex
           .split("")
@@ -35,10 +36,49 @@ export function applyOpacity(hex: string, opacity: number): string {
           .join("")
       : cleanHex;
 
-  const alpha = Math.round((opacity / 100) * 255);
+  const rgbHex = normalizedHex.slice(0, 6);
+  const existingAlpha = normalizedHex.length === 8 ? Number.parseInt(normalizedHex.slice(6), 16) : 255;
+  const alpha = Math.round((opacity / 100) * existingAlpha);
   const alphaHex = alpha.toString(16).padStart(2, "0").toUpperCase();
 
-  return `#${fullHex.toUpperCase()}${alphaHex}`;
+  return `#${rgbHex.toUpperCase()}${alphaHex}`;
+}
+
+export type ColorOpacityModifier = {
+  baseColorKey: string;
+  opacity: number | null;
+  suffix: string;
+};
+
+const COLOR_OPACITY_MODIFIER_PATTERN = /^(.+)\/(\d+|\[((?:\d+(?:\.\d*)?|\.\d+)(?:%)?)\])$/;
+
+/**
+ * Split and parse a Tailwind color opacity modifier.
+ * Named values are percentages (`/50`), while arbitrary values accept a raw
+ * alpha (`/[.5]`) or an explicit percentage (`/[50%]`).
+ */
+export function parseColorOpacityModifier(colorKey: string): ColorOpacityModifier | null {
+  const match = colorKey.match(COLOR_OPACITY_MODIFIER_PATTERN);
+  if (!match) {
+    return null;
+  }
+
+  const [, baseColorKey, modifier, arbitraryValue] = match;
+  let opacity: number;
+
+  if (arbitraryValue === undefined) {
+    opacity = Number.parseInt(modifier, 10);
+  } else if (arbitraryValue.endsWith("%")) {
+    opacity = Number.parseFloat(arbitraryValue.slice(0, -1));
+  } else {
+    opacity = Number.parseFloat(arbitraryValue) * 100;
+  }
+
+  return {
+    baseColorKey,
+    opacity: Number.isFinite(opacity) && opacity >= 0 && opacity <= 100 ? opacity : null,
+    suffix: `/${modifier}`,
+  };
 }
 
 /**
@@ -77,14 +117,11 @@ export function parseColorValue(colorKey: string, customColors?: Record<string, 
     return customColors?.[key] ?? COLORS[key];
   };
 
-  // Check for opacity modifier: red-500/50, [#ff0000]/80
-  const opacityMatch = colorKey.match(/^(.+)\/(\d+)$/);
-  if (opacityMatch) {
-    const baseColorKey = opacityMatch[1];
-    const opacity = Number.parseInt(opacityMatch[2], 10);
-
-    // Validate opacity range (0-100)
-    if (opacity < 0 || opacity > 100) {
+  // Check for opacity modifier: red-500/50, red-500/[.5], [#ff0000]/[50%]
+  const opacityModifier = parseColorOpacityModifier(colorKey);
+  if (opacityModifier) {
+    const { baseColorKey, opacity } = opacityModifier;
+    if (opacity === null) {
       return null;
     }
 

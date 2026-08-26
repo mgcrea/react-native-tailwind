@@ -5,6 +5,82 @@ description: Access the parser and constants programmatically
 
 Access the parser and constants programmatically for advanced use cases.
 
+## Compile-Time Raw Colors
+
+Use `twColor` for a static color string that can be declared at module scope. It accepts the same palette names, utility-form names, slash opacity, and arbitrary hex values as color utilities:
+
+```tsx
+import { twColor } from "@mgcrea/react-native-tailwind";
+
+const blue = twColor`blue-500`;
+const translucentBlue = twColor`blue-500/35`;
+const customHex = twColor`[#50d71e]`;
+```
+
+Each tag is replaced with a string literal and has no runtime cost. Interpolations and `scheme:` tokens produce a compile error. A static tag cannot react to a runtime color scheme, so use `useTwColor` for scheme-aware colors.
+
+Use `useTwColor` when a React Native API needs a reactive color string instead of a `style` object, such as navigation options, gradients, SVG, or Skia:
+
+```tsx
+import { useTwColor, useTwColors } from "@mgcrea/react-native-tailwind";
+
+function Header() {
+  const tintColor = useTwColor("scheme:accent");
+
+  return <Icon color={tintColor} />;
+}
+```
+
+Hook tokens use the same configured palette as color classes. Prefix a token with `scheme:` to resolve its configured light and dark variants reactively:
+
+```tsx
+const card = useTwColor("scheme:card");
+const fallback = useTwColor("blue-500");
+```
+
+The Babel plugin replaces each call with literal color strings. Scheme tokens reuse the plugin's configured `colorScheme` hook, including custom application theme hooks.
+When that hook returns `"dark"`, the dark variant is used; `"light"`, `null`, and other non-dark values use the light variant, matching the default light appearance before a dark preference is active.
+
+Use `useTwColors` to resolve several named colors with one injected scheme hook:
+
+```tsx
+function Screen() {
+  const colors = useTwColors({
+    background: "scheme:background",
+    text: "scheme:text",
+    accent: "accent",
+  });
+
+  return (
+    <LinearGradient colors={[colors.background, colors.accent]}>
+      <Text style={{ color: colors.text }}>Hello</Text>
+    </LinearGradient>
+  );
+}
+```
+
+Both helpers require static string literals and must be called unconditionally inside a function component. Unknown colors, unsupported modifiers, dynamic expressions, and module-scope calls produce a compile error. Utility-form tokens such as `bg-card` and `text-accent` are accepted, but raw palette names are preferred when the consumer needs only a string.
+
+### Type Checking Custom Theme Tokens
+
+The Babel plugin validates every token against the actual Tailwind configuration, but the exported TypeScript signature accepts `string` because a library declaration cannot automatically infer another project's Babel-loaded configuration or arbitrary-value grammar. Applications can keep config-derived autocomplete and typo checking with a direct `satisfies` expression:
+
+```tsx
+import tailwindConfig from "./tailwind.config";
+
+type ThemeColor = keyof typeof tailwindConfig.theme.extend.colors;
+type SchemeThemeColor = `scheme:${ThemeColor}`;
+
+function Card() {
+  const background = useTwColor("scheme:card" satisfies SchemeThemeColor);
+  const colors = useTwColors({
+    text: "scheme:text" satisfies SchemeThemeColor,
+  });
+}
+```
+
+TypeScript checks the literal against the application's config-derived union, then the Babel plugin removes the type-only expression and compiles the color normally. Keep the literal directly inside `useTwColor` or `useTwColors`; variables and wrapper functions are intentionally rejected so the compiler can prove the token statically.
+
 ## parseClassName
 
 Parse className strings to React Native styles:
@@ -166,7 +242,7 @@ function ThemedComponent() {
 
 ## Important Notes
 
-- The programmatic API parses styles at **runtime**, not compile-time
+- `twColor`, `useTwColor`, and `useTwColors` are compile-time APIs; `parseClassName` parses styles at runtime
 - For production apps, prefer using `className` prop for compile-time optimization
 - Use the programmatic API for:
   - Testing

@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { COLORS, applyOpacity, parseArbitraryColor, parseColorValue } from "./colorUtils";
+import {
+  COLORS,
+  applyOpacity,
+  parseArbitraryColor,
+  parseColorOpacityModifier,
+  parseColorValue,
+} from "./colorUtils";
 
 describe("COLORS", () => {
   it("should include basic colors", () => {
@@ -31,6 +37,12 @@ describe("applyOpacity", () => {
     expect(applyOpacity("#00f", 75)).toBe("#0000FFBF");
   });
 
+  it("should multiply existing alpha on 8-digit hex colors", () => {
+    expect(applyOpacity("#ff000080", 50)).toBe("#FF000040");
+    expect(applyOpacity("#edecf7af", 25)).toBe("#EDECF72C");
+    expect(applyOpacity("#edecf7af", 100)).toBe("#EDECF7AF");
+  });
+
   it("should handle various opacity values", () => {
     expect(applyOpacity("#000000", 0)).toBe("#00000000");
     expect(applyOpacity("#000000", 25)).toBe("#00000040");
@@ -49,6 +61,39 @@ describe("applyOpacity", () => {
   it("should uppercase the output", () => {
     expect(applyOpacity("#aabbcc", 50)).toBe("#AABBCC80");
     expect(applyOpacity("#AbCdEf", 50)).toBe("#ABCDEF80");
+  });
+});
+
+describe("parseColorOpacityModifier", () => {
+  it("should parse named percentages and arbitrary alpha values", () => {
+    expect(parseColorOpacityModifier("card/35")).toEqual({
+      baseColorKey: "card",
+      opacity: 35,
+      suffix: "/35",
+    });
+    expect(parseColorOpacityModifier("card/[.37]")).toEqual({
+      baseColorKey: "card",
+      opacity: 37,
+      suffix: "/[.37]",
+    });
+    expect(parseColorOpacityModifier("card/[37%]")).toEqual({
+      baseColorKey: "card",
+      opacity: 37,
+      suffix: "/[37%]",
+    });
+  });
+
+  it("should preserve recognized but out-of-range modifiers for validation", () => {
+    expect(parseColorOpacityModifier("card/101")).toEqual({
+      baseColorKey: "card",
+      opacity: null,
+      suffix: "/101",
+    });
+    expect(parseColorOpacityModifier("card/[1.1]")).toEqual({
+      baseColorKey: "card",
+      opacity: null,
+      suffix: "/[1.1]",
+    });
   });
 });
 
@@ -144,6 +189,17 @@ describe("parseColorValue", () => {
       expect(parseColorValue("[#0000ff]/80")).toBe("#0000FFCC");
     });
 
+    it("should apply arbitrary raw and percentage opacity values", () => {
+      expect(parseColorValue("red-500/[.37]")).toBe(applyOpacity(COLORS["red-500"], 37));
+      expect(parseColorValue("black/[37%]")).toBe("#0000005E");
+      expect(parseColorValue("[#ff0000]/[.5]")).toBe("#FF000080");
+    });
+
+    it("should compose opacity with colors that already have alpha", () => {
+      expect(parseColorValue("[#ff000080]/50")).toBe("#FF000040");
+      expect(parseColorValue("translucent/[.25]", { translucent: "#edecf7af" })).toBe("#EDECF72C");
+    });
+
     it("should handle edge opacity values", () => {
       expect(parseColorValue("red-500/0")).toBe(applyOpacity(COLORS["red-500"], 0));
       expect(parseColorValue("red-500/100")).toBe(applyOpacity(COLORS["red-500"], 100));
@@ -153,6 +209,8 @@ describe("parseColorValue", () => {
       expect(parseColorValue("red-500/101")).toBeNull();
       expect(parseColorValue("red-500/-1")).toBeNull();
       expect(parseColorValue("red-500/abc")).toBeNull();
+      expect(parseColorValue("red-500/[1.1]")).toBeNull();
+      expect(parseColorValue("red-500/[101%]")).toBeNull();
     });
 
     it("should keep transparent unchanged with opacity", () => {

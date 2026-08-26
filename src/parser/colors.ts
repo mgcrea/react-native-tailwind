@@ -3,7 +3,7 @@
  */
 
 import type { StyleObject } from "../types";
-import { COLORS, applyOpacity, parseArbitraryColor } from "../utils/colorUtils";
+import { COLORS, applyOpacity, parseArbitraryColor, parseColorOpacityModifier } from "../utils/colorUtils";
 
 // Re-export COLORS for backward compatibility and tests
 export { COLORS };
@@ -21,18 +21,16 @@ export function parseColor(cls: string, customColors?: Record<string, string>): 
   // Helper to parse color with optional opacity modifier
   // Uses internal implementation to preserve warnings for invalid arbitrary colors
   const parseColorWithOpacity = (colorKey: string): string | null => {
-    // Check for opacity modifier: blue-500/50
-    const opacityMatch = colorKey.match(/^(.+)\/(\d+)$/);
-    if (opacityMatch) {
-      const baseColorKey = opacityMatch[1];
-      const opacity = Number.parseInt(opacityMatch[2], 10);
-
-      // Validate opacity range (0-100)
-      if (opacity < 0 || opacity > 100) {
+    // Check for opacity modifier: blue-500/50, blue-500/[.5], blue-500/[50%]
+    const opacityModifier = parseColorOpacityModifier(colorKey);
+    if (opacityModifier) {
+      const { baseColorKey, opacity } = opacityModifier;
+      if (opacity === null) {
         /* v8 ignore next 5 */
         if (process.env.NODE_ENV !== "production") {
           console.warn(
-            `[react-native-tailwind] Invalid opacity value: ${opacity}. Opacity must be between 0 and 100.`,
+            `[react-native-tailwind] Invalid opacity modifier: ${opacityModifier.suffix}. ` +
+              "Use an integer percentage from 0 to 100, a raw arbitrary alpha from 0 to 1, or an arbitrary percentage.",
           );
         }
         return null;

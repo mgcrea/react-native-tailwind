@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { applyOpacity } from "../utils/colorUtils";
+import { parseColor } from "./colors";
 import type { ParsedModifier } from "./modifiers";
 import {
   expandSchemeModifier,
@@ -418,6 +420,23 @@ describe("isColorClass", () => {
     expect(isColorClass("border-black")).toBe(true);
   });
 
+  it("should return true for outline color classes", () => {
+    expect(isColorClass("outline-red-500")).toBe(true);
+    expect(isColorClass("outline-systemGray")).toBe(true);
+    expect(isColorClass("outline-black")).toBe(true);
+  });
+
+  it("should return false for non-color outline classes", () => {
+    expect(isColorClass("outline-none")).toBe(false);
+    expect(isColorClass("outline-solid")).toBe(false);
+    expect(isColorClass("outline-dashed")).toBe(false);
+    expect(isColorClass("outline-dotted")).toBe(false);
+    expect(isColorClass("outline-hidden")).toBe(false);
+    expect(isColorClass("outline-2")).toBe(false);
+    expect(isColorClass("outline-offset-2")).toBe(false);
+    expect(isColorClass("outline-[3px]")).toBe(false);
+  });
+
   it("should return false for non-color classes", () => {
     expect(isColorClass("m-4")).toBe(false);
     expect(isColorClass("p-2")).toBe(false);
@@ -482,6 +501,118 @@ describe("expandSchemeModifier", () => {
     });
   });
 
+  it("should preserve opacity modifiers when expanding scheme colors", () => {
+    const modifier = { modifier: "scheme" as const, baseClass: "bg-primary/25" };
+    const result = expandSchemeModifier(modifier, customColors);
+
+    expect(result).toEqual([
+      { modifier: "dark", baseClass: "bg-primary-dark/25" },
+      { modifier: "light", baseClass: "bg-primary-light/25" },
+    ]);
+  });
+
+  it("should produce parsable color variants with the requested opacity", () => {
+    const [dark, light] = expandSchemeModifier(
+      { modifier: "scheme", baseClass: "bg-primary/25" },
+      customColors,
+    );
+
+    expect(parseColor(dark.baseClass, customColors)).toEqual({
+      backgroundColor: applyOpacity(customColors["primary-dark"], 25),
+    });
+    expect(parseColor(light.baseClass, customColors)).toEqual({
+      backgroundColor: applyOpacity(customColors["primary-light"], 25),
+    });
+  });
+
+  it("should preserve arbitrary opacity modifiers when expanding scheme colors", () => {
+    const result = expandSchemeModifier({ modifier: "scheme", baseClass: "bg-primary/[.37]" }, customColors);
+
+    expect(result).toEqual([
+      { modifier: "dark", baseClass: "bg-primary-dark/[.37]" },
+      { modifier: "light", baseClass: "bg-primary-light/[.37]" },
+    ]);
+    expect(parseColor(result[0].baseClass, customColors)).toEqual({
+      backgroundColor: applyOpacity(customColors["primary-dark"], 37),
+    });
+  });
+
+  it("should compose scheme opacity with configured colors that already have alpha", () => {
+    const colors = {
+      "glass-dark": "#11223380",
+      "glass-light": "#EDECF7AF",
+    };
+    const [dark, light] = expandSchemeModifier({ modifier: "scheme", baseClass: "bg-glass/50" }, colors);
+
+    expect(parseColor(dark.baseClass, colors)).toEqual({ backgroundColor: "#11223340" });
+    expect(parseColor(light.baseClass, colors)).toEqual({ backgroundColor: "#EDECF758" });
+  });
+
+  it("should preserve edge opacity values for every supported color prefix", () => {
+    expect(expandSchemeModifier({ modifier: "scheme", baseClass: "text-systemGray/0" }, customColors)).toEqual(
+      [
+        { modifier: "dark", baseClass: "text-systemGray-dark/0" },
+        { modifier: "light", baseClass: "text-systemGray-light/0" },
+      ],
+    );
+    expect(expandSchemeModifier({ modifier: "scheme", baseClass: "border-accent/100" }, customColors)).toEqual(
+      [
+        { modifier: "dark", baseClass: "border-accent-dark/100" },
+        { modifier: "light", baseClass: "border-accent-light/100" },
+      ],
+    );
+  });
+
+  it("should validate scheme variants without including the opacity suffix", () => {
+    const modifier = { modifier: "scheme" as const, baseClass: "bg-missing/25" };
+    expect(expandSchemeModifier(modifier, customColors)).toEqual([]);
+  });
+
+  it("should expand outline color scheme modifier", () => {
+    const modifier = { modifier: "scheme" as const, baseClass: "outline-primary" };
+    const result = expandSchemeModifier(modifier, customColors);
+
+    expect(result).toHaveLength(2);
+    expect((result as [ParsedModifier, ParsedModifier])[0]).toEqual({
+      modifier: "dark",
+      baseClass: "outline-primary-dark",
+    });
+    expect((result as [ParsedModifier, ParsedModifier])[1]).toEqual({
+      modifier: "light",
+      baseClass: "outline-primary-light",
+    });
+  });
+
+  it("should produce parsable outline color variants", () => {
+    const [dark, light] = expandSchemeModifier(
+      { modifier: "scheme", baseClass: "outline-primary" },
+      customColors,
+    );
+
+    expect(parseColor(dark.baseClass, customColors)).toEqual({ outlineColor: "#1E40AF" });
+    expect(parseColor(light.baseClass, customColors)).toEqual({ outlineColor: "#BFDBFE" });
+  });
+
+  it("should preserve integer and arbitrary opacity for scheme outline colors", () => {
+    expect(
+      expandSchemeModifier({ modifier: "scheme", baseClass: "outline-primary/25" }, customColors),
+    ).toEqual([
+      { modifier: "dark", baseClass: "outline-primary-dark/25" },
+      { modifier: "light", baseClass: "outline-primary-light/25" },
+    ]);
+
+    const [dark, light] = expandSchemeModifier(
+      { modifier: "scheme", baseClass: "outline-primary/[.37]" },
+      customColors,
+    );
+    expect(parseColor(dark.baseClass, customColors)).toEqual({
+      outlineColor: applyOpacity(customColors["primary-dark"], 37),
+    });
+    expect(parseColor(light.baseClass, customColors)).toEqual({
+      outlineColor: applyOpacity(customColors["primary-light"], 37),
+    });
+  });
+
   it("should use custom suffixes when provided", () => {
     const modifier = { modifier: "scheme" as const, baseClass: "text-systemGray" };
     const _result = expandSchemeModifier(modifier, customColors, "-darkMode", "-lightMode");
@@ -492,6 +623,19 @@ describe("expandSchemeModifier", () => {
     };
 
     expect(expandSchemeModifier(modifier, expectedColors, "-darkMode", "-lightMode")).toHaveLength(2);
+  });
+
+  it("should combine opacity with custom scheme suffixes", () => {
+    const modifier = { modifier: "scheme" as const, baseClass: "text-systemGray/50" };
+    const colors = {
+      "systemGray-night": "#333333",
+      "systemGray-day": "#CCCCCC",
+    };
+
+    expect(expandSchemeModifier(modifier, colors, "-night", "-day")).toEqual([
+      { modifier: "dark", baseClass: "text-systemGray-night/50" },
+      { modifier: "light", baseClass: "text-systemGray-day/50" },
+    ]);
   });
 
   it("should return empty array for non-color classes", () => {

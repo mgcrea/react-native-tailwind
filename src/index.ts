@@ -5,6 +5,7 @@
 
 // Compile-time tw/twStyle functions (transformed by Babel plugin)
 export { tw, twStyle } from "./stubs/tw";
+export { twColor, useTwColor, useTwColors } from "./stubs/twColor";
 
 // Main parser functions
 export { parseClass, parseClassName } from "./parser";
