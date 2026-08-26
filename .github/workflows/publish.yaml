@@ -7,9 +7,9 @@ on:
       - "[0-9]+.[0-9]+.[0-9]+-*"
   workflow_dispatch:
 
-# Required for npm provenance (OIDC) and for creating the GitHub release
+# id-token: write is required for npm provenance (OIDC)
 permissions:
-  contents: write
+  contents: read
   id-token: write
 
 jobs:
@@ -47,7 +47,9 @@ jobs:
         run: pnpm run spec
       - name: Build 💎
         run: pnpm run build
+      # Published with npm, not pnpm: pnpm publish accepts --provenance but
+      # silently ignores it, yielding a publish with no attestation.
       - name: Publish to npm 🚀
-        run: pnpm publish --access public --provenance --no-git-checks
+        run: npm publish --access public --provenance --ignore-scripts
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
