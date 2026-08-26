@@ -172,6 +172,21 @@ The `scheme:` modifier only works with color utilities:
 - ✅ `scheme:border-{color}` — Border colors
 - ❌ Other utilities — Ignored with development warning
 
+Opacity modifiers are preserved when the semantic color expands:
+
+```tsx
+<View className="scheme:bg-primary/25" />
+// dark:bg-primary-dark/25 light:bg-primary-light/25
+
+<Text className="scheme:text-systemLabel/80" />
+// dark:text-systemLabel-dark/80 light:text-systemLabel-light/80
+
+<View className="scheme:bg-primary/[.37]" />
+// dark:bg-primary-dark/[.37] light:bg-primary-light/[.37]
+```
+
+Named opacity modifiers use percentages from `/0` through `/100`. Arbitrary modifiers accept a raw alpha such as `/[.37]` or an explicit percentage such as `/[37%]`. If a configured color already includes an alpha channel, the modifier composes with that alpha instead of producing an invalid color.
+
 ### Use Cases
 
 **Semantic color names:**
