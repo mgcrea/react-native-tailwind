@@ -94,6 +94,26 @@ export function callExpressionVisitor(
   }
 
   const calleeName = node.callee.name;
+  if (state.useTwStyleImportNames.has(calleeName)) {
+    if (node.arguments.length !== 1) {
+      throw path.buildCodeFrameError(
+        "[react-native-tailwind] useTwStyle() expects exactly one compiled tw/twStyle object.",
+      );
+    }
+
+    const componentScope = findComponentScope(path, t);
+    if (!componentScope) {
+      throw path.buildCodeFrameError(
+        "[react-native-tailwind] useTwStyle() must be called unconditionally inside a React function component.",
+      );
+    }
+
+    state.functionComponentsNeedingColorScheme.add(componentScope);
+    state.needsColorSchemeImport = true;
+    node.arguments.push(t.identifier(state.colorSchemeVariableName));
+    return;
+  }
+
   if (!state.twImportNames.has(calleeName)) {
     return;
   }

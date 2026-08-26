@@ -121,6 +121,52 @@ Both `style` (with runtime conditionals) and `darkStyle`/`lightStyle` properties
 - **Manual control**: Access `textStyles.darkStyle` or `textStyles.lightStyle` for custom logic
 :::
 
+### Shared Module-Level Theme Styles
+
+Hooks cannot run at module scope, but theme-aware styles can still be declared there and resolved reactively where they are consumed:
+
+```tsx
+import { View } from "react-native";
+import { tw, useTwStyle } from "@mgcrea/react-native-tailwind";
+
+const cardStyles = tw`bg-white dark:bg-gray-900 light:bg-gray-50`;
+
+export function Card({ selected }: { selected: boolean }) {
+  // Call the hook unconditionally inside the component.
+  const themedCardStyle = useTwStyle(cardStyles);
+
+  return <View style={selected ? themedCardStyle : undefined} />;
+}
+```
+
+At compile time, the module-level declaration retains every variant without attempting an invalid module-level hook call:
+
+```tsx
+const cardStyles = {
+  style: styles._bg_white,
+  darkStyle: styles._dark_bg_gray_900,
+  lightStyle: styles._light_bg_gray_50,
+};
+```
+
+`useTwStyle` uses the color-scheme hook configured in the Babel plugin, including custom theme-provider hooks. The consuming component re-renders and selects the matching variant when that hook changes. The module-level `style` property remains the base style; it is intentionally not a mutable global value.
+
+For an explicit or controlled scheme value, use the pure resolver:
+
+```tsx
+import { resolveTwStyle } from "@mgcrea/react-native-tailwind";
+import { useAppColorScheme } from "./theme";
+
+export function Card() {
+  const colorScheme = useAppColorScheme();
+  const themedCardStyle = resolveTwStyle(cardStyles, colorScheme);
+
+  return <View style={themedCardStyle} />;
+}
+```
+
+The same API works with `twStyle("...")` declarations.
+
 ## With Platform Modifiers
 
 Platform modifiers (`ios:`, `android:`, `web:`) work in `tw` calls anywhere:

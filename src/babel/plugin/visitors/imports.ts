@@ -110,6 +110,8 @@ export function importDeclarationVisitor(
           const localName = spec.local.name;
           state.twImportNames.add(localName);
           // Don't set hasTwImport yet - only set it when we successfully transform a call
+        } else if (importedName === "useTwStyle") {
+          state.useTwStyleImportNames.add(spec.local.name);
         }
       }
     });

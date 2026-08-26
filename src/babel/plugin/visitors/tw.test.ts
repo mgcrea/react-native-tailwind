@@ -212,6 +212,62 @@ describe("twStyle visitor - function transformation", () => {
 });
 
 describe("tw/twStyle - color scheme modifiers", () => {
+  it("should make useTwStyle use the configured color scheme hook", () => {
+    const output = transform(
+      `
+        import { tw, useTwStyle } from '@mgcrea/react-native-tailwind';
+        const sharedStyles = tw\`bg-white dark:bg-gray-900\`;
+
+        export function Component() {
+          return useTwStyle(sharedStyles);
+        }
+      `,
+      {
+        colorScheme: {
+          importFrom: "@/theme/useColorScheme",
+          importName: "useAppColorScheme",
+        },
+      },
+    );
+
+    expect(output).toContain('from "@/theme/useColorScheme"');
+    expect(output).toContain("_twColorScheme = useAppColorScheme()");
+    expect(output).toContain("useTwStyle(sharedStyles, _twColorScheme)");
+    expect(output).not.toContain('useColorScheme } from "react-native"');
+  });
+
+  it("should support aliased useTwStyle imports and reuse an existing hook alias", () => {
+    const output = transform(
+      `
+        import { useAppColorScheme as useTheme } from '@/theme/useColorScheme';
+        import { tw, useTwStyle as useSharedStyle } from '@mgcrea/react-native-tailwind';
+        const sharedStyles = tw\`bg-white dark:bg-gray-900\`;
+
+        export const Component = () => useSharedStyle(sharedStyles);
+      `,
+      {
+        colorScheme: {
+          importFrom: "@/theme/useColorScheme",
+          importName: "useAppColorScheme",
+        },
+      },
+    );
+
+    expect(output.match(/useAppColorScheme\s+as\s+useTheme/g)).toHaveLength(1);
+    expect(output).toContain("_twColorScheme = useTheme()");
+    expect(output).toContain("useSharedStyle(sharedStyles, _twColorScheme)");
+  });
+
+  it("should reject useTwStyle outside a function component", () => {
+    expect(() =>
+      transform(`
+        import { tw, useTwStyle } from '@mgcrea/react-native-tailwind';
+        const sharedStyles = tw\`bg-white dark:bg-gray-900\`;
+        export const resolved = useTwStyle(sharedStyles);
+      `),
+    ).toThrow(/useTwStyle\(\) must be called unconditionally inside a React function component/);
+  });
+
   it("should transform tw with dark: modifier inside component", () => {
     const input = `
       import { tw } from '@mgcrea/react-native-tailwind';
@@ -302,7 +358,7 @@ describe("tw/twStyle - color scheme modifiers", () => {
     expect(output).toContain("_twStyles._active_bg_blue_500");
   });
 
-  it("should warn if tw with color scheme modifiers used outside component", () => {
+  it("should preserve color scheme variants when tw is used outside a component", () => {
     const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
     const input = `
@@ -313,16 +369,60 @@ describe("tw/twStyle - color scheme modifiers", () => {
 
     const output = transform(input);
 
-    // Should warn about usage outside component
+    // Should explain how to resolve the generated variants at the consumption site
     expect(consoleWarnSpy).toHaveBeenCalledWith(
-      expect.stringContaining("Color scheme modifiers (dark:, light:) in tw/twStyle calls"),
+      expect.stringContaining("use useTwStyle() or resolveTwStyle() inside the consumer"),
     );
 
     // Should not inject hook (no component scope)
     expect(output).not.toContain("useColorScheme");
 
-    // Should still generate styles but without runtime conditionals
+    // Should generate the base style and raw dark variant without module-level hook conditionals
     expect(output).toContain("_twStyles");
+    expect(output).toContain("style: _twStyles._bg_white");
+    expect(output).toContain("darkStyle: _twStyles._dark_bg_gray_900");
+    expect(output).not.toContain('_twColorScheme === "dark"');
+
+    consoleWarnSpy.mockRestore();
+  });
+
+  it("should preserve both variants for module-level twStyle calls", () => {
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const input = `
+      import { twStyle } from '@mgcrea/react-native-tailwind';
+
+      export const sharedStyles = twStyle('bg-gray-500 dark:bg-gray-900 light:bg-gray-100');
+    `;
+
+    const output = transform(input);
+
+    expect(output).not.toContain("useColorScheme");
+    expect(output).toContain("style: _twStyles._bg_gray_500");
+    expect(output).toContain("darkStyle: _twStyles._dark_bg_gray_900");
+    expect(output).toContain("lightStyle: _twStyles._light_bg_gray_100");
+
+    consoleWarnSpy.mockRestore();
+  });
+
+  it("should preserve the runtime useTwStyle import and inject its scheme argument", () => {
+    const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const input = `
+      import { tw, useTwStyle } from '@mgcrea/react-native-tailwind';
+
+      const sharedStyles = tw\`bg-white dark:bg-gray-900\`;
+
+      export function Component() {
+        const style = useTwStyle(sharedStyles);
+        return style;
+      }
+    `;
+
+    const output = transform(input);
+
+    expect(output).not.toMatch(/import\s*{[^}]*\btw\b/);
+    expect(output).toMatch(/import\s*{\s*useTwStyle\s*}\s*from/);
+    expect(output).toContain("darkStyle: _twStyles._dark_bg_gray_900");
+    expect(output).toContain("useTwStyle(sharedStyles, _twColorScheme)");
 
     consoleWarnSpy.mockRestore();
   });

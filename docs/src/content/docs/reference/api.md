@@ -39,6 +39,36 @@ function parseClassName(
 ): ViewStyle | TextStyle | ImageStyle;
 ```
 
+## useTwStyle
+
+Reactively resolve a module-level compiled `tw` or `twStyle` object with the color-scheme hook configured in the Babel plugin:
+
+```tsx
+import { tw, useTwStyle } from "@mgcrea/react-native-tailwind";
+
+const sharedStyles = tw`bg-white dark:bg-gray-900`;
+
+function Component() {
+  const style = useTwStyle(sharedStyles);
+  return <View style={style} />;
+}
+```
+
+Call `useTwStyle` unconditionally inside a function component, like any React hook. The Babel plugin injects the configured hook, including custom `colorScheme.importFrom` and `colorScheme.importName` providers.
+
+## resolveTwStyle
+
+Resolve the same compiled object with an explicit scheme. Use this for controlled or imperative theme state when you already have a scheme value:
+
+```tsx
+import { resolveTwStyle } from "@mgcrea/react-native-tailwind";
+
+const style = resolveTwStyle(sharedStyles, "dark");
+// [sharedStyles.style, sharedStyles.darkStyle]
+```
+
+The resolver accepts `"light"`, `"dark"`, React Native's `"unspecified"`, `null`, or `undefined`. It does not mutate the compiled style object or an existing style array.
+
 ## Constants
 
 Access default color and spacing scales:
@@ -166,7 +196,7 @@ function ThemedComponent() {
 
 ## Important Notes
 
-- The programmatic API parses styles at **runtime**, not compile-time
+- `parseClassName` parses styles at **runtime**; `useTwStyle` and `resolveTwStyle` only select already compiled variants
 - For production apps, prefer using `className` prop for compile-time optimization
 - Use the programmatic API for:
   - Testing

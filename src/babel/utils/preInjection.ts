@@ -25,9 +25,10 @@ export function scanForColorSchemeModifiers(
   supportedAttributes: Set<string>,
   attributePatterns: RegExp[],
   twImportNames: Set<string>,
+  useTwStyleImportNames: Set<string>,
   t: typeof BabelTypes,
 ): boolean {
-  return walkNode(node, supportedAttributes, attributePatterns, twImportNames, t);
+  return walkNode(node, supportedAttributes, attributePatterns, twImportNames, useTwStyleImportNames, t);
 }
 
 function walkNode(
@@ -35,6 +36,7 @@ function walkNode(
   supportedAttributes: Set<string>,
   attributePatterns: RegExp[],
   twImportNames: Set<string>,
+  useTwStyleImportNames: Set<string>,
   t: typeof BabelTypes,
 ): boolean {
   // Check JSXAttribute with color scheme class names
@@ -59,6 +61,10 @@ function walkNode(
 
   // Check CallExpression (twStyle("dark:..."))
   if (t.isCallExpression(node) && t.isIdentifier(node.callee)) {
+    if (useTwStyleImportNames.has(node.callee.name)) {
+      return true;
+    }
+
     if (twImportNames.has(node.callee.name)) {
       const arg = node.arguments[0];
       if (t.isStringLiteral(arg) && COLOR_SCHEME_PATTERN.test(arg.value)) {
@@ -80,7 +86,9 @@ function walkNode(
         if (isASTNode(item)) {
           // Skip nested functions (they have their own scope)
           if (t.isFunction(item)) continue;
-          if (walkNode(item, supportedAttributes, attributePatterns, twImportNames, t)) {
+          if (
+            walkNode(item, supportedAttributes, attributePatterns, twImportNames, useTwStyleImportNames, t)
+          ) {
             return true;
           }
         }
@@ -88,7 +96,7 @@ function walkNode(
     } else if (isASTNode(child)) {
       // Skip nested functions
       if (t.isFunction(child)) continue;
-      if (walkNode(child, supportedAttributes, attributePatterns, twImportNames, t)) {
+      if (walkNode(child, supportedAttributes, attributePatterns, twImportNames, useTwStyleImportNames, t)) {
         return true;
       }
     }
