@@ -1,0 +1,53 @@
+name: Publish Package
+
+on:
+  push:
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+"
+      - "[0-9]+.[0-9]+.[0-9]+-*"
+  workflow_dispatch:
+
+# Required for npm provenance (OIDC) and for creating the GitHub release
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    name: Publish to npm
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v5
+      - name: Setup pnpm 🔧
+        uses: pnpm/action-setup@v4
+      - name: Setup Node.js 🔧
+        uses: actions/setup-node@v6
+        with:
+          node-version: "lts/*"
+          check-latest: true
+          cache: "pnpm"
+          registry-url: "https://registry.npmjs.org"
+      - name: Verify tag matches package.json version 🔍
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG="$(node -p "require('./package.json').version")"
+          if [ "$TAG" != "$PKG" ]; then
+            echo "::error::Tag '$TAG' does not match package.json version '$PKG'"
+            exit 1
+          fi
+          echo "Publishing version $PKG"
+      - name: Install dependencies 🪄
+        run: pnpm install --frozen-lockfile
+      - name: Lint 🔍
+        run: pnpm run lint
+      - name: TypeScript 🔍
+        run: pnpm run check
+      - name: Vitest 🔍
+        run: pnpm run spec
+      - name: Build 💎
+        run: pnpm run build
+      - name: Publish to npm 🚀
+        run: pnpm publish --access public --provenance --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
