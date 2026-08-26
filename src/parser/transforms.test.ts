@@ -32,6 +32,7 @@ describe("parseTransform - scale utilities", () => {
     expect(parseTransform("scale-0")).toEqual({ transform: [{ scale: 0 }] });
     expect(parseTransform("scale-50")).toEqual({ transform: [{ scale: 0.5 }] });
     expect(parseTransform("scale-75")).toEqual({ transform: [{ scale: 0.75 }] });
+    expect(parseTransform("scale-80")).toEqual({ transform: [{ scale: 0.8 }] });
     expect(parseTransform("scale-90")).toEqual({ transform: [{ scale: 0.9 }] });
     expect(parseTransform("scale-95")).toEqual({ transform: [{ scale: 0.95 }] });
     expect(parseTransform("scale-100")).toEqual({ transform: [{ scale: 1 }] });
@@ -40,11 +41,14 @@ describe("parseTransform - scale utilities", () => {
     expect(parseTransform("scale-125")).toEqual({ transform: [{ scale: 1.25 }] });
     expect(parseTransform("scale-150")).toEqual({ transform: [{ scale: 1.5 }] });
     expect(parseTransform("scale-200")).toEqual({ transform: [{ scale: 2 }] });
+    expect(parseTransform("scale-102.5")).toEqual({ transform: [{ scale: 1.025 }] });
+    expect(parseTransform("scale-999")).toEqual({ transform: [{ scale: 9.99 }] });
   });
 
   it("should parse scaleX values", () => {
     expect(parseTransform("scale-x-0")).toEqual({ transform: [{ scaleX: 0 }] });
     expect(parseTransform("scale-x-50")).toEqual({ transform: [{ scaleX: 0.5 }] });
+    expect(parseTransform("scale-x-80")).toEqual({ transform: [{ scaleX: 0.8 }] });
     expect(parseTransform("scale-x-100")).toEqual({ transform: [{ scaleX: 1 }] });
     expect(parseTransform("scale-x-150")).toEqual({ transform: [{ scaleX: 1.5 }] });
   });
@@ -52,16 +56,21 @@ describe("parseTransform - scale utilities", () => {
   it("should parse scaleY values", () => {
     expect(parseTransform("scale-y-0")).toEqual({ transform: [{ scaleY: 0 }] });
     expect(parseTransform("scale-y-75")).toEqual({ transform: [{ scaleY: 0.75 }] });
+    expect(parseTransform("scale-y-80")).toEqual({ transform: [{ scaleY: 0.8 }] });
     expect(parseTransform("scale-y-100")).toEqual({ transform: [{ scaleY: 1 }] });
     expect(parseTransform("scale-y-125")).toEqual({ transform: [{ scaleY: 1.25 }] });
   });
 
   it("should parse arbitrary scale values", () => {
     expect(parseTransform("scale-[1.23]")).toEqual({ transform: [{ scale: 1.23 }] });
+    expect(parseTransform("scale-[80]")).toEqual({ transform: [{ scale: 80 }] });
     expect(parseTransform("scale-[0.5]")).toEqual({ transform: [{ scale: 0.5 }] });
     expect(parseTransform("scale-[2.5]")).toEqual({ transform: [{ scale: 2.5 }] });
     expect(parseTransform("scale-x-[1.5]")).toEqual({ transform: [{ scaleX: 1.5 }] });
     expect(parseTransform("scale-y-[0.8]")).toEqual({ transform: [{ scaleY: 0.8 }] });
+    expect(parseTransform("scale-[80%]")).toEqual({ transform: [{ scale: 0.8 }] });
+    expect(parseTransform("scale-x-[125%]")).toEqual({ transform: [{ scaleX: 1.25 }] });
+    expect(parseTransform("scale-y-[80%]")).toEqual({ transform: [{ scaleY: 0.8 }] });
   });
 
   it("should parse negative arbitrary scale values", () => {
@@ -69,9 +78,15 @@ describe("parseTransform - scale utilities", () => {
     expect(parseTransform("scale-x-[-0.5]")).toEqual({ transform: [{ scaleX: -0.5 }] });
   });
 
+  it("should parse negative numeric scale values", () => {
+    expect(parseTransform("-scale-80")).toEqual({ transform: [{ scale: -0.8 }] });
+    expect(parseTransform("-scale-x-125")).toEqual({ transform: [{ scaleX: -1.25 }] });
+    expect(parseTransform("-scale-y-50")).toEqual({ transform: [{ scaleY: -0.5 }] });
+  });
+
   it("should return null for invalid scale values", () => {
-    expect(parseTransform("scale-999")).toBeNull();
     expect(parseTransform("scale-invalid")).toBeNull();
+    expect(parseTransform("scale-10x")).toBeNull();
   });
 });
 

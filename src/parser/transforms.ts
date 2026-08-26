@@ -59,13 +59,14 @@ export const PERSPECTIVE_SCALE: Record<string, number> = {
 };
 
 /**
- * Parse arbitrary scale value: [1.23], [0.5]
+ * Parse arbitrary scale value: [1.23], [0.5], [80%]
  * Returns number for valid scale, null otherwise
  */
 function parseArbitraryScale(value: string): number | null {
-  const scaleMatch = value.match(/^\[(-?\d+(?:\.\d+)?)\]$/);
+  const scaleMatch = value.match(/^\[(-?\d+(?:\.\d+)?)(%)?\]$/);
   if (scaleMatch) {
-    return parseFloat(scaleMatch[1]);
+    const parsedValue = Number.parseFloat(scaleMatch[1]);
+    return scaleMatch[2] === "%" ? parsedValue / 100 : parsedValue;
   }
 
   // Unsupported format
@@ -73,10 +74,33 @@ function parseArbitraryScale(value: string): number | null {
     /* v8 ignore next 5 */
     if (process.env.NODE_ENV !== "production") {
       console.warn(
-        `[react-native-tailwind] Invalid arbitrary scale value: ${value}. Only numbers are supported (e.g., [1.5], [0.75]).`,
+        `[react-native-tailwind] Invalid arbitrary scale value: ${value}. Only numbers and percentages are supported (e.g., [1.5], [0.75], [80%]).`,
       );
     }
     return null;
+  }
+
+  return null;
+}
+
+/**
+ * Parse a Tailwind scale value.
+ * Named numeric utilities are percentages (scale-80 -> 0.8), while bracketed
+ * arbitrary numbers are raw React Native multipliers (scale-[1.25] -> 1.25).
+ */
+function parseScaleValue(value: string): number | null {
+  const arbitraryScale = parseArbitraryScale(value);
+  if (arbitraryScale !== null) {
+    return arbitraryScale;
+  }
+
+  const presetScale = SCALE_MAP[value];
+  if (presetScale !== undefined) {
+    return presetScale;
+  }
+
+  if (/^\d+(?:\.\d+)?$/.test(value)) {
+    return Number.parseFloat(value) / 100;
   }
 
   return null;
@@ -181,51 +205,33 @@ export function parseTransform(cls: string, customSpacing?: Record<string, numbe
     return null;
   }
 
-  // Scale: scale-{value}
-  if (cls.startsWith("scale-")) {
-    const scaleKey = cls.substring(6);
-
-    // Arbitrary values: scale-[1.23]
-    const arbitraryScale = parseArbitraryScale(scaleKey);
-    if (arbitraryScale !== null) {
-      return { transform: [{ scale: arbitraryScale }] };
-    }
-
-    const scaleValue = SCALE_MAP[scaleKey];
-    if (scaleValue !== undefined) {
-      return { transform: [{ scale: scaleValue }] };
+  // Scale: scale-{value}, -scale-{value}
+  const scaleMatch = cls.match(/^(-?)scale-(.+)$/);
+  if (scaleMatch) {
+    const [, negativePrefix, scaleKey] = scaleMatch;
+    const scaleValue = parseScaleValue(scaleKey);
+    if (scaleValue !== null) {
+      return { transform: [{ scale: negativePrefix === "-" ? -scaleValue : scaleValue }] };
     }
   }
 
-  // Scale X: scale-x-{value}
-  if (cls.startsWith("scale-x-")) {
-    const scaleKey = cls.substring(8);
-
-    // Arbitrary values: scale-x-[1.5]
-    const arbitraryScale = parseArbitraryScale(scaleKey);
-    if (arbitraryScale !== null) {
-      return { transform: [{ scaleX: arbitraryScale }] };
-    }
-
-    const scaleValue = SCALE_MAP[scaleKey];
-    if (scaleValue !== undefined) {
-      return { transform: [{ scaleX: scaleValue }] };
+  // Scale X: scale-x-{value}, -scale-x-{value}
+  const scaleXMatch = cls.match(/^(-?)scale-x-(.+)$/);
+  if (scaleXMatch) {
+    const [, negativePrefix, scaleKey] = scaleXMatch;
+    const scaleValue = parseScaleValue(scaleKey);
+    if (scaleValue !== null) {
+      return { transform: [{ scaleX: negativePrefix === "-" ? -scaleValue : scaleValue }] };
     }
   }
 
-  // Scale Y: scale-y-{value}
-  if (cls.startsWith("scale-y-")) {
-    const scaleKey = cls.substring(8);
-
-    // Arbitrary values: scale-y-[2.5]
-    const arbitraryScale = parseArbitraryScale(scaleKey);
-    if (arbitraryScale !== null) {
-      return { transform: [{ scaleY: arbitraryScale }] };
-    }
-
-    const scaleValue = SCALE_MAP[scaleKey];
-    if (scaleValue !== undefined) {
-      return { transform: [{ scaleY: scaleValue }] };
+  // Scale Y: scale-y-{value}, -scale-y-{value}
+  const scaleYMatch = cls.match(/^(-?)scale-y-(.+)$/);
+  if (scaleYMatch) {
+    const [, negativePrefix, scaleKey] = scaleYMatch;
+    const scaleValue = parseScaleValue(scaleKey);
+    if (scaleValue !== null) {
+      return { transform: [{ scaleY: negativePrefix === "-" ? -scaleValue : scaleValue }] };
     }
   }
 
