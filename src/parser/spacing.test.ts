@@ -197,6 +197,18 @@ describe("parseSpacing - gap", () => {
     expect(parseSpacing("gap-[100px]")).toEqual({ gap: 100 });
     expect(parseSpacing("gap-[100]")).toEqual({ gap: 100 });
   });
+
+  it("should parse horizontal and vertical gaps", () => {
+    expect(parseSpacing("gap-x-2")).toEqual({ columnGap: 8 });
+    expect(parseSpacing("gap-y-1.5")).toEqual({ rowGap: 6 });
+    expect(parseSpacing("gap-x-px")).toEqual({ columnGap: 1 });
+    expect(parseSpacing("gap-y-0")).toEqual({ rowGap: 0 });
+  });
+
+  it("should parse directional gaps with arbitrary values", () => {
+    expect(parseSpacing("gap-x-[12px]")).toEqual({ columnGap: 12 });
+    expect(parseSpacing("gap-y-[4.5]")).toEqual({ rowGap: 4.5 });
+  });
 });
 
 describe("parseSpacing - edge cases", () => {
@@ -507,6 +519,8 @@ describe("parseSpacing - custom spacing", () => {
     expect(parseSpacing("gap-xs", customSpacing)).toEqual({ gap: 4 });
     expect(parseSpacing("gap-md", customSpacing)).toEqual({ gap: 16 });
     expect(parseSpacing("gap-xl", customSpacing)).toEqual({ gap: 64 });
+    expect(parseSpacing("gap-x-sm", customSpacing)).toEqual({ columnGap: 8 });
+    expect(parseSpacing("gap-y-lg", customSpacing)).toEqual({ rowGap: 32 });
   });
 
   it("should allow custom spacing to override preset values", () => {
